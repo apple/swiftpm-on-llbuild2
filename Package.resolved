@@ -2,12 +2,21 @@
   "object": {
     "pins": [
       {
+        "package": "grpc-swift",
+        "repositoryURL": "https://github.com/grpc/grpc-swift.git",
+        "state": {
+          "branch": "master",
+          "revision": "f3d77f4631abfae3809e0ef24ea73319de7fac47",
+          "version": null
+        }
+      },
+      {
         "package": "swift-argument-parser",
         "repositoryURL": "https://github.com/apple/swift-argument-parser.git",
         "state": {
           "branch": null,
-          "revision": "223d62adc52d51669ae2ee19bdb8b7d9fd6fcd9c",
-          "version": "0.0.6"
+          "revision": "3d79b2b5a2e5af52c14e462044702ea7728f5770",
+          "version": "0.1.0"
         }
       },
       {
@@ -15,8 +24,8 @@
         "repositoryURL": "https://github.com/apple/swift-crypto.git",
         "state": {
           "branch": null,
-          "revision": "d67ac68d09a95443303e9d6e37b34e7ba101d5f1",
-          "version": "1.0.1"
+          "revision": "9b9d1868601a199334da5d14f4ab2d37d4f8d0c5",
+          "version": "1.0.2"
         }
       },
       {
@@ -24,7 +33,7 @@
         "repositoryURL": "https://github.com/apple/swift-llbuild.git",
         "state": {
           "branch": "master",
-          "revision": "0816cf594c2e4d890d1f188271da667f99763fa9",
+          "revision": "145c113cde37318f3cef38843f9ce6a678aaa4fd",
           "version": null
         }
       },
@@ -33,8 +42,17 @@
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
           "branch": "master",
-          "revision": "29fb93e1c5b60ec8e4574fa138a1806fb40d699c",
+          "revision": "bebc8bc97e7af4271dabb4c8e6ed77d74cb9c306",
           "version": null
+        }
+      },
+      {
+        "package": "swift-log",
+        "repositoryURL": "https://github.com/apple/swift-log.git",
+        "state": {
+          "branch": null,
+          "revision": "74d7b91ceebc85daf387ebb206003f78813f71aa",
+          "version": "1.2.0"
         }
       },
       {
@@ -42,26 +60,53 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "c5fa0b456524cd73dc3ddbb263d4f46c20b86ca3",
-          "version": "2.17.0"
+          "revision": "120acb15c39aa3217e9888e515de160378fbcc1e",
+          "version": "2.18.0"
+        }
+      },
+      {
+        "package": "swift-nio-http2",
+        "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
+        "state": {
+          "branch": null,
+          "revision": "c5d10f4165128c3d0cc0e3c0f0a8ef55947a73a6",
+          "version": "1.12.2"
+        }
+      },
+      {
+        "package": "swift-nio-ssl",
+        "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
+        "state": {
+          "branch": null,
+          "revision": "f0b118d9af6c4e78bc4f3f4fbb464020172b0bf4",
+          "version": "2.7.5"
+        }
+      },
+      {
+        "package": "swift-nio-transport-services",
+        "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
+        "state": {
+          "branch": null,
+          "revision": "2ac8fde712c1b1a147ecb7065824a40d2c09d0cb",
+          "version": "1.6.0"
         }
       },
       {
         "package": "SwiftProtobuf",
         "repositoryURL": "https://github.com/apple/swift-protobuf.git",
         "state": {
-          "branch": "master",
-          "revision": "aaf0101617e4b896acbf24f671c1e6551f05063c",
-          "version": null
+          "branch": null,
+          "revision": "7f36441e3372665b1b414f8ac93b5905cc42a405",
+          "version": "1.9.0"
         }
       },
       {
         "package": "swift-tools-support-core",
         "repositoryURL": "https://github.com/apple/swift-tools-support-core.git",
         "state": {
-          "branch": null,
-          "revision": "912919ab8441306c86c514b78800e4498ab60b60",
-          "version": "0.1.3"
+          "branch": "master",
+          "revision": "81e2cda46447b4d78c18e03b0d284d76950f7c2b",
+          "version": null
         }
       }
     ]
