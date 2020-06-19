@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.1
 
 // This source file is part of the Swift.org open source project
 //
@@ -18,20 +18,21 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.0.1"),
         .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
-        .package(name: "llbuild2", url: "https://github.com/apple/swift-llbuild2.git", .branch("master")),
+        .package(url: "https://github.com/apple/swift-llbuild2.git", .branch("master")),
     ],
     targets: [
         .target(
             name: "LLBSwiftBuild",
             dependencies: [
-                "llbuild2",
+                "llbuild2BuildSystem",
+                "llbuild2Util"
             ]
         ),
 
         .target(
             name: "spmllb2",
             dependencies: [
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "ArgumentParser",
                 "LLBSwiftBuild",
             ]
         ),
@@ -55,8 +56,8 @@ let package = Package(
             name: "spm-workflow",
             dependencies: [
                 "ExampleWorkflows",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "SwiftToolsSupport-auto", package: "swift-tools-support-core"),
+                "ArgumentParser",
+                "SwiftToolsSupport-auto",
             ],
             path: "Sources/Workflows/spm-workflow"
         ),
