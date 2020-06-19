@@ -41,10 +41,15 @@ let package = Package(
             dependencies: ["LLBSwiftBuild"]
         ),
 
-        .target(name: "Workflow"),
+        .target(
+            name: "Workflow",
+            path: "Sources/Workflows/Workflow"
+        ),
+
         .target(
             name: "ExampleWorkflows",
-            dependencies: ["Workflow"]
+            dependencies: ["Workflow"],
+            path: "Sources/Workflows/ExampleWorkflows"
         ),
         .target(
             name: "spm-workflow",
@@ -52,7 +57,8 @@ let package = Package(
                 "ExampleWorkflows",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SwiftToolsSupport-auto", package: "swift-tools-support-core"),
-            ]
+            ],
+            path: "Sources/Workflows/spm-workflow"
         ),
     ]
 )
