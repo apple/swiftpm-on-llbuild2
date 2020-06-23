@@ -14,6 +14,7 @@ import LLBBuildSystemUtil
 import Foundation
 import TSCBasic
 import LLBSwiftBuild
+import TSCLibc
 
 struct SPMLLBTool: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -21,18 +22,27 @@ struct SPMLLBTool: ParsableCommand {
         ]
     )
 
+    func cwd() throws -> AbsolutePath {
+        guard let cwd = localFileSystem.currentWorkingDirectory else {
+            throw StringError("unable to find current working directory")
+        }
+        return cwd
+    }
+
     func run() throws {
         let group = MultiThreadedEventLoopGroup(
             numberOfThreads: ProcessInfo.processInfo.processorCount
         )
-        guard let cwd = localFileSystem.currentWorkingDirectory else {
-            throw StringError("unable to find current working directory")
-        }
 
+        let cwd = try self.cwd()
         let buildDir = cwd.appending(component: ".build")
         let db = LLBFileBackedCASDatabase(
             group: group,
             path: buildDir.appending(component: "cas")
+        )
+        let fnCache = LLBFileBackedFunctionCache(
+            group: group,
+            path: buildDir.appending(component: "cache")
         )
 
         let executor = LLBLocalExecutor(
@@ -54,7 +64,8 @@ struct SPMLLBTool: ParsableCommand {
             configuredTargetDelegate: buildSystemDelegate,
             ruleLookupDelegate: buildSystemDelegate,
             registrationDelegate: buildSystemDelegate,
-            executor: executor
+            executor: executor,
+            functionCache: fnCache
         )
 
         let request = BuildRequest(rootID: .init(), targets: [])
