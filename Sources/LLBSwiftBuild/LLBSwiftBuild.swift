@@ -31,6 +31,13 @@ public struct BuildResult: LLBBuildValue, Codable {
     }
 }
 
+public struct SPMTarget: LLBConfiguredTarget, Codable {
+    var packageName: String
+    var name: String
+    var sources: [String]
+    var dependencies: [LLBProviderMap]
+}
+
 class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
     override func evaluate(
         key: BuildRequest,
@@ -41,6 +48,45 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
             label: try! LLBLabel("//foo:foo")
         )
 
-        return fi.group.next().makeFailedFuture(StringError("unimplemented \(configuredTargetKey)"))
+        let providerMap = fi.requestDependency(configuredTargetKey)
+
+        let artifactValue = providerMap.flatMapThrowing {
+            try $0.get(SPMProvider.self).stdout
+        }.flatMap { artifact in
+            fi.requestArtifact(artifact)
+        }
+
+        return artifactValue.map {
+            BuildResult(stdout: $0.dataID)
+        }
+    }
+}
+
+public struct SPMProvider: LLBProvider, Codable {
+    public var targetName: String
+    public var stdout: LLBArtifact
+}
+
+public class SPMRule: LLBBuildRule<SPMTarget> {
+    public override func evaluate(
+        configuredTarget: SPMTarget,
+        _ ruleContext: LLBRuleContext
+    ) throws -> LLBFuture<[LLBProvider]> {
+        let stdoutArtifact = try ruleContext.declareArtifact("stdout.txt")
+
+        try ruleContext.registerAction(
+            arguments: [
+                "/bin/bash", "-c", "echo \(configuredTarget.sources) > \(stdoutArtifact.path)"
+            ],
+            inputs: [],
+            outputs: [stdoutArtifact]
+        )
+
+        let provider = SPMProvider(
+            targetName: configuredTarget.name,
+            stdout: stdoutArtifact
+        )
+
+        return ruleContext.group.next().makeSucceededFuture([provider])
     }
 }

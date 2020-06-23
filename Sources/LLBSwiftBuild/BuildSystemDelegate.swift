@@ -14,7 +14,9 @@ import Foundation
 import TSCBasic
 
 public struct SwiftBuildSystemDelegate {
-    let rules: [String: LLBRule] = [:]
+    let rules: [String: LLBRule] = [
+        SPMTarget.identifier: SPMRule(),
+    ]
 
     let functions: [LLBBuildKeyIdentifier: LLBFunction]
 
@@ -30,9 +32,14 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         for key: LLBConfiguredTargetKey,
         _ fi: LLBBuildFunctionInterface
     ) throws -> LLBFuture<LLBConfiguredTarget> {
-        let label = key.label
+        let target = SPMTarget(
+            packageName: "foo",
+            name: key.label.targetName,
+            sources: ["main.swift", "foo.swift"],
+            dependencies: []
+        )
 
-        throw StringError("target \(label) not found")
+        return fi.group.next().makeSucceededFuture(target)
     }
 }
 
@@ -50,5 +57,6 @@ extension SwiftBuildSystemDelegate: LLBBuildFunctionLookupDelegate {
 
 extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
     public func registerTypes(registry: LLBSerializableRegistry) {
+        registry.register(type: SPMTarget.self)
     }
 }
