@@ -26,8 +26,8 @@ struct SPMLLBTool: ParsableCommand {
     @OptionGroup()
     var options: Options
 
-    @Option(default: "//...")
-    var target: String
+    @Option()
+    var targets: [String]
 
     @Option()
     var rootID: String?
@@ -48,7 +48,7 @@ struct SPMLLBTool: ParsableCommand {
 
         let request = BuildRequest(
             rootID: rootID,
-            target: try LLBLabel(self.target)
+            targets: try self.targets.map{ try LLBLabel($0) }
         )
 
         let result = try engine.build(request).wait()
