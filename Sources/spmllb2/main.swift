@@ -54,7 +54,6 @@ struct SPMLLBTool: ParsableCommand {
             configuredTargetDelegate: buildSystemDelegate,
             ruleLookupDelegate: buildSystemDelegate,
             registrationDelegate: buildSystemDelegate,
-            db: db,
             executor: executor
         )
 
