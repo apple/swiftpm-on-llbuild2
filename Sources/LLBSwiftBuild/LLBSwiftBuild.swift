@@ -14,12 +14,12 @@ import Foundation
 import TSCBasic
 
 public struct BuildRequest: Codable, LLBBuildKey, Hashable {
-    public var targets: [LLBLabel]
+    public var target: LLBLabel
     public var rootID: LLBDataID
 
-    public init(rootID: LLBDataID, targets: [LLBLabel]) {
+    public init(rootID: LLBDataID, target: LLBLabel) {
         self.rootID = rootID
-        self.targets = targets
+        self.target = target
     }
 }
 
@@ -36,15 +36,11 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         key: BuildRequest,
         _ fi: LLBBuildFunctionInterface
     ) -> LLBFuture<BuildResult> {
-        do {
-            let configuredTargetKey = LLBConfiguredTargetKey(
-                rootID: LLBDataID(),
-                label: try LLBLabel("//swiftpm:cli")
-            )
+        let configuredTargetKey = LLBConfiguredTargetKey(
+            rootID: key.rootID,
+            label: key.target
+        )
 
-            return fi.group.next().makeFailedFuture(StringError("unimplemented \(configuredTargetKey)"))
-        } catch {
-            return fi.group.next().makeFailedFuture(error)
-        }
+        return fi.group.next().makeFailedFuture(StringError("unimplemented \(configuredTargetKey)"))
     }
 }
