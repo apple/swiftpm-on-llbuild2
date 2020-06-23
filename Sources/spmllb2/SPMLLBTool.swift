@@ -51,8 +51,11 @@ struct SPMLLBTool: ParsableCommand {
             targets: try self.targets.map{ try LLBLabel($0) }
         )
 
-        let result = try engine.build(request).wait()
-        print(result)
+        let result = try engine.build(request, as: BuildResult.self).wait()
+
+        let db = try options.db()
+        let stdout = try db.get(result.stdout).wait()!.toData()
+        print(String(data: stdout, encoding: .utf8) ?? "")
     }
 
     func importDir(path: AbsolutePath) throws -> LLBDataID {
