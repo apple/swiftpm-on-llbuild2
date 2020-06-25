@@ -32,6 +32,9 @@ struct SPMLLBTool: ParsableCommand {
     @Option()
     var rootID: String?
 
+    @Flag()
+    var disableFnCache: Bool = false
+
     func run() throws {
         let rootID: LLBDataID
 
@@ -107,7 +110,7 @@ struct SPMLLBTool: ParsableCommand {
             ruleLookupDelegate: buildSystemDelegate,
             registrationDelegate: buildSystemDelegate,
             executor: executor,
-            functionCache: fnCache
+            functionCache: disableFnCache ? nil : fnCache
         )
     }
 }
