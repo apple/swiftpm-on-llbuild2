@@ -14,6 +14,8 @@ import LLBCAS
 
 struct Options: ParsableArguments {
 
+    @Option()
+    var packagePath: String?
 }
 
 extension Options {
@@ -25,11 +27,19 @@ extension Options {
         )
     }
 
-    func buildDir() throws -> AbsolutePath {
-        try cwd().appending(component: ".build")
+    func getPackagePath() throws -> AbsolutePath {
+        if let packagePath = self.packagePath {
+            return try AbsolutePath(validating: packagePath)
+        } else {
+            return try cwd()
+        }
     }
 
-    func cwd() throws -> AbsolutePath {
+    func buildDir() throws -> AbsolutePath {
+        try getPackagePath().appending(component: ".build")
+    }
+
+    private func cwd() throws -> AbsolutePath {
         guard let cwd = localFileSystem.currentWorkingDirectory else {
             throw StringError("unable to find current working directory")
         }

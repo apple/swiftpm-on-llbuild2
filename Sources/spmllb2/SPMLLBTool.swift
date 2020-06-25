@@ -35,7 +35,7 @@ struct SPMLLBTool: ParsableCommand {
     func run() throws {
         let rootID: LLBDataID
 
-        let packagePath = try options.cwd()
+        let packagePath = try options.getPackagePath()
         if let rootID_ = self.rootID.flatMap({ LLBDataID(string: $0) }) {
             rootID = rootID_
         } else {
