@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
           "branch": "master",
-          "revision": "4be0ed195975aeaada12bba50907a0854eaa3b91",
+          "revision": "b6fca172f11b745715466964529e0c1937532dc1",
           "version": null
         }
       },
@@ -33,7 +33,7 @@
         "repositoryURL": "https://github.com/apple/swift-driver.git",
         "state": {
           "branch": "master",
-          "revision": "d1fd1855b20e98303a04fd5b049a4c24b7db905b",
+          "revision": "79176d8c087e4315482625519187def09fca9835",
           "version": null
         }
       },
@@ -51,7 +51,7 @@
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
           "branch": "master",
-          "revision": "6fae9409dd2cbec2a4774f6d6e945b970310e69c",
+          "revision": "de4d925cb8a062ee94c089920f3b8e3bbf013d58",
           "version": null
         }
       },

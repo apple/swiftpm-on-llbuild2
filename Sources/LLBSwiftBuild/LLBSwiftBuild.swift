@@ -94,8 +94,7 @@ public class SPMRule: LLBBuildRule<SPMTarget> {
 
         let provider = SPMProvider(
             targetName: configuredTarget.name,
-            // FIXME: Seems like local executor doesn't import file outputs using CASTree.
-            executable: buildDir
+            executable: executable
         )
 
         return ruleContext.group.next().makeSucceededFuture([provider])
