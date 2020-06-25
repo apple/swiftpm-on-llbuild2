@@ -24,10 +24,10 @@ public struct BuildRequest: Codable, LLBBuildKey, Hashable {
 }
 
 public struct BuildResult: LLBBuildValue, Codable {
-    public let executable: LLBDataID
+    public var runnable: LLBDataID?
 
-    public init(executable: LLBDataID) {
-        self.executable = executable
+    public init(runnable: LLBDataID?) {
+        self.runnable = runnable
     }
 }
 
@@ -54,21 +54,27 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
 
         let providerMap = fi.requestDependency(configuredTargetKey)
 
-        let artifactValue = providerMap.flatMapThrowing {
-            try $0.get(SPMProvider.self).executable
-        }.flatMap { artifact in
-            fi.requestArtifact(artifact)
+        let runnable = providerMap.flatMapThrowing {
+            try $0.get(DefaultProvider.self).runnable
+        }.flatMapThrowing { runnable -> LLBArtifact in
+            guard let run = runnable else {
+                throw StringError("only executable targets can be built right now")
+            }
+            return run
+        }.flatMap {
+            fi.requestArtifact($0)
         }
 
-        return artifactValue.map {
-            BuildResult(executable: $0.dataID)
+        return runnable.map {
+            BuildResult(runnable: $0.dataID)
         }
     }
 }
 
-public struct SPMProvider: LLBProvider, Codable {
+public struct DefaultProvider: LLBProvider, Codable {
     public var targetName: String
-    public var executable: LLBArtifact
+    public var runnable: LLBArtifact?
+    public var outputs: [LLBArtifact]
 }
 
 public class SPMRule: LLBBuildRule<SPMTarget> {
@@ -92,9 +98,10 @@ public class SPMRule: LLBBuildRule<SPMTarget> {
             outputs: [executable, buildDir]
         )
 
-        let provider = SPMProvider(
+        let provider = DefaultProvider(
             targetName: configuredTarget.name,
-            executable: executable
+            runnable: executable,
+            outputs: [executable]
         )
 
         return ruleContext.group.next().makeSucceededFuture([provider])
