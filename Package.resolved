@@ -29,6 +29,15 @@
         }
       },
       {
+        "package": "swift-driver",
+        "repositoryURL": "https://github.com/apple/swift-driver.git",
+        "state": {
+          "branch": "master",
+          "revision": "d1fd1855b20e98303a04fd5b049a4c24b7db905b",
+          "version": null
+        }
+      },
+      {
         "package": "llbuild",
         "repositoryURL": "https://github.com/apple/swift-llbuild.git",
         "state": {
@@ -106,6 +115,15 @@
         "state": {
           "branch": "master",
           "revision": "81e2cda46447b4d78c18e03b0d284d76950f7c2b",
+          "version": null
+        }
+      },
+      {
+        "package": "Yams",
+        "repositoryURL": "https://github.com/jpsim/Yams.git",
+        "state": {
+          "branch": "master",
+          "revision": "11bbadede6637b90b015594d2933e1e82b1a1892",
           "version": null
         }
       }
