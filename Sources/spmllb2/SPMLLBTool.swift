@@ -56,9 +56,12 @@ struct SPMLLBTool: ParsableCommand {
 
         let result = try engine.build(request, as: BuildResult.self).wait()
 
+        let resultsDir = buildDir.appending(component: "results")
+        try? localFileSystem.removeFileTree(resultsDir)
+        try localFileSystem.createDirectory(resultsDir, recursive: true)
+
         let db = try options.db()
-        let stdout = try db.get(result.stdout).wait()!.toData()
-        print(String(data: stdout, encoding: .utf8) ?? "")
+        try LLBCASFileTree.export(result.executable, from: db, to: resultsDir).wait()
     }
 
     func importDir(path: AbsolutePath) throws -> LLBDataID {

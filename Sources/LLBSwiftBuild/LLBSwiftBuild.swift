@@ -24,10 +24,10 @@ public struct BuildRequest: Codable, LLBBuildKey, Hashable {
 }
 
 public struct BuildResult: LLBBuildValue, Codable {
-    public let stdout: LLBDataID
+    public let executable: LLBDataID
 
-    public init(stdout: LLBDataID) {
-        self.stdout = stdout
+    public init(executable: LLBDataID) {
+        self.executable = executable
     }
 }
 
@@ -38,8 +38,7 @@ public struct SPMTarget: LLBConfiguredTarget, Codable {
 
     var packageName: String
     var name: String
-    var sourceArtifact: LLBArtifact
-    var sources: [String]
+    var sources: [LLBArtifact]
     var dependencies: [LLBLabel]
 }
 
@@ -56,20 +55,20 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         let providerMap = fi.requestDependency(configuredTargetKey)
 
         let artifactValue = providerMap.flatMapThrowing {
-            try $0.get(SPMProvider.self).stdout
+            try $0.get(SPMProvider.self).executable
         }.flatMap { artifact in
             fi.requestArtifact(artifact)
         }
 
         return artifactValue.map {
-            BuildResult(stdout: $0.dataID)
+            BuildResult(executable: $0.dataID)
         }
     }
 }
 
 public struct SPMProvider: LLBProvider, Codable {
     public var targetName: String
-    public var stdout: LLBArtifact
+    public var executable: LLBArtifact
 }
 
 public class SPMRule: LLBBuildRule<SPMTarget> {
@@ -77,19 +76,26 @@ public class SPMRule: LLBBuildRule<SPMTarget> {
         configuredTarget: SPMTarget,
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
-        let stdoutArtifact = try ruleContext.declareArtifact("stdout.txt")
+        let buildDir = try ruleContext.declareDirectoryArtifact("build")
+        let executable = try ruleContext.declareArtifact("build/\(configuredTarget.name)")
+
+        let mainFile = configuredTarget.sources[0]
 
         try ruleContext.registerAction(
             arguments: [
-                "/bin/bash", "-c", "echo \(configuredTarget.sources) > \(stdoutArtifact.path)"
+                "swiftc",
+                mainFile.path,
+                "-o",
+                executable.path,
             ],
-            inputs: [],
-            outputs: [stdoutArtifact]
+            inputs: [mainFile],
+            outputs: [executable, buildDir]
         )
 
         let provider = SPMProvider(
             targetName: configuredTarget.name,
-            stdout: stdoutArtifact
+            // FIXME: Seems like local executor doesn't import file outputs using CASTree.
+            executable: buildDir
         )
 
         return ruleContext.group.next().makeSucceededFuture([provider])

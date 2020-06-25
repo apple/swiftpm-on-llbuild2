@@ -20,7 +20,12 @@ public struct SwiftBuildSystemDelegate {
 
     let functions: [LLBBuildKeyIdentifier: LLBFunction]
 
+    let engineContext: LLBBuildEngineContext
+    var db: LLBCASDatabase { engineContext.db }
+    var group: LLBFuturesDispatchGroup { engineContext.group }
+
     public init(engineContext: LLBBuildEngineContext) {
+        self.engineContext = engineContext
         self.functions = [
             BuildRequest.identifier : BuildFunction(engineContext: engineContext)
         ]
@@ -36,20 +41,38 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         let packageName = label.logicalPathComponents[0]
         let targetName = label.targetName
 
-        let sourceArtifact = LLBArtifact.source(
-            shortPath: packageName + "_" + targetName,
-            dataID: key.rootID
-        )
+        let client = LLBCASFSClient(db)
 
-        let target = SPMTarget(
-            packageName: packageName,
-            name: key.label.targetName,
-            sourceArtifact: sourceArtifact,
-            sources: ["main.swift", "foo.swift"],
-            dependencies: []
-        )
+        let srcTree: LLBFuture<LLBCASFileTree> = client.load(key.rootID).flatMapThrowing { node in
+            guard let tree = node.tree else {
+                throw StringError("the package root \(key.rootID) is not a directory")
+            }
+            return tree
+        }
 
-        return fi.group.next().makeSucceededFuture(target)
+        let sourceFile = srcTree.flatMap { tree in
+            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: db)
+        }.map { result -> LLBDataID in
+            guard let result = result?.id else {
+                fatalError("unable to find main.swift")
+            }
+            return result
+        }.map {
+            LLBArtifact.source(
+                shortPath: "main.swift",
+                roots: [label.asRoot, "src"],
+                dataID: $0
+            )
+        }
+
+        return sourceFile.map { file in
+            SPMTarget(
+                packageName: packageName,
+                name: targetName,
+                sources: [file],
+                dependencies: []
+            )
+        }
     }
 }
 
@@ -68,5 +91,29 @@ extension SwiftBuildSystemDelegate: LLBBuildFunctionLookupDelegate {
 extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
     public func registerTypes(registry: LLBSerializableRegistry) {
         registry.register(type: SPMTarget.self)
+    }
+}
+
+extension LLBArtifact {
+    // FIXME: Move to LLBuild2.
+    /// Returns a source artifact with a reference to the data ID containing artifact's contents.
+    static func sourceDirectory(
+        shortPath: String,
+        roots: [String] = [],
+        dataID: LLBDataID
+    ) -> LLBArtifact {
+        return LLBArtifact.with {
+            $0.originType = .source(dataID)
+            $0.shortPath = shortPath
+            $0.type = .directory
+            $0.roots = roots
+        }
+    }
+}
+
+// FIXME: Make public in LLBuild2.
+extension LLBLabel {
+    var asRoot: String {
+        return (self.logicalPathComponents + [self.targetName]).joined(separator: "/")
     }
 }
