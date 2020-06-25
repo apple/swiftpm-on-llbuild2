@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
           "branch": "master",
-          "revision": "2e35e1d1556ba0c590bdef0644fa5786cd1ef113",
+          "revision": "4be0ed195975aeaada12bba50907a0854eaa3b91",
           "version": null
         }
       },
@@ -51,7 +51,7 @@
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
           "branch": "master",
-          "revision": "9d711cc9501f1851ba91de6633ddd3412286494e",
+          "revision": "6fae9409dd2cbec2a4774f6d6e945b970310e69c",
           "version": null
         }
       },

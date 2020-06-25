@@ -93,27 +93,3 @@ extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
         registry.register(type: SPMTarget.self)
     }
 }
-
-extension LLBArtifact {
-    // FIXME: Move to LLBuild2.
-    /// Returns a source artifact with a reference to the data ID containing artifact's contents.
-    static func sourceDirectory(
-        shortPath: String,
-        roots: [String] = [],
-        dataID: LLBDataID
-    ) -> LLBArtifact {
-        return LLBArtifact.with {
-            $0.originType = .source(dataID)
-            $0.shortPath = shortPath
-            $0.type = .directory
-            $0.roots = roots
-        }
-    }
-}
-
-// FIXME: Make public in LLBuild2.
-extension LLBLabel {
-    var asRoot: String {
-        return (self.logicalPathComponents + [self.targetName]).joined(separator: "/")
-    }
-}
