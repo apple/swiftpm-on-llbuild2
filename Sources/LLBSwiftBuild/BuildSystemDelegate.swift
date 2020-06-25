@@ -32,9 +32,19 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         for key: LLBConfiguredTargetKey,
         _ fi: LLBBuildFunctionInterface
     ) throws -> LLBFuture<LLBConfiguredTarget> {
+        let label = key.label
+        let packageName = label.logicalPathComponents[0]
+        let targetName = label.targetName
+
+        let sourceArtifact = LLBArtifact.source(
+            shortPath: packageName + "_" + targetName,
+            dataID: key.rootID
+        )
+
         let target = SPMTarget(
-            packageName: "foo",
+            packageName: packageName,
             name: key.label.targetName,
+            sourceArtifact: sourceArtifact,
             sources: ["main.swift", "foo.swift"],
             dependencies: []
         )

@@ -38,6 +38,7 @@ public struct SPMTarget: LLBConfiguredTarget, Codable {
 
     var packageName: String
     var name: String
+    var sourceArtifact: LLBArtifact
     var sources: [String]
     var dependencies: [LLBLabel]
 }
