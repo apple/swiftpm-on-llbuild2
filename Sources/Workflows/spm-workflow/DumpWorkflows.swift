@@ -14,8 +14,8 @@ import Workflow
 
 struct DumpWorkflows: ParsableCommand {
 
-    @Option(default: "ExampleWorkflows")
-    var moduleName: String
+    @Option()
+    var moduleName: String = "ExampleWorkflows"
 
     @Option()
     var moduleDir: String?

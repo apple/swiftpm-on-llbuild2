@@ -6,7 +6,7 @@
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
           "branch": "master",
-          "revision": "7e7fdb183ee1b9ea9863d425488de97411d21b80",
+          "revision": "2e35e1d1556ba0c590bdef0644fa5786cd1ef113",
           "version": null
         }
       },
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser.git",
         "state": {
           "branch": null,
-          "revision": "3d79b2b5a2e5af52c14e462044702ea7728f5770",
-          "version": "0.1.0"
+          "revision": "eb51f949cdd0c9d88abba9ce79d37eb7ea1231d0",
+          "version": "0.2.0"
         }
       },
       {
@@ -42,7 +42,7 @@
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
           "branch": "master",
-          "revision": "6e4627128dd0503870279fd5d3dc99c4189464f7",
+          "revision": "9d711cc9501f1851ba91de6633ddd3412286494e",
           "version": null
         }
       },

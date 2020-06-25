@@ -32,10 +32,14 @@ public struct BuildResult: LLBBuildValue, Codable {
 }
 
 public struct SPMTarget: LLBConfiguredTarget, Codable {
+    public var targetDependencies: [String: LLBTargetDependency] {
+        ["dependencies": .list(dependencies)]
+    }
+
     var packageName: String
     var name: String
     var sources: [String]
-    var dependencies: [LLBProviderMap]
+    var dependencies: [LLBLabel]
 }
 
 class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
