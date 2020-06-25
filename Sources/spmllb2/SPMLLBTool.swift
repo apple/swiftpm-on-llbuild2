@@ -55,6 +55,9 @@ struct SPMLLBTool: ParsableCommand {
         )
 
         let result = try engine.build(request, as: BuildResult.self).wait()
+        guard let executable = result.runnable else {
+            throw StringError("expected runnable output from the target")
+        }
 
         let resultsDir = buildDir.appending(component: "results")
         try? localFileSystem.removeFileTree(resultsDir)
@@ -63,7 +66,7 @@ struct SPMLLBTool: ParsableCommand {
         let exec = resultsDir.appending(component: "a.out")
         let db = try options.db()
         try LLBCASFileTree.export(
-            result.executable,
+            executable,
             from: db,
             to: exec
         ).wait()
