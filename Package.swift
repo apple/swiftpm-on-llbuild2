@@ -20,6 +20,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
         .package(url: "https://github.com/apple/swift-llbuild2.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-driver.git", .branch("master")),
+        .package(url: "https://github.com/apple/swift-package-manager.git", .revision("617c8a7a8bf169830674545b721aaf72a6719328")),
+
     ],
     targets: [
         .target(
@@ -28,6 +30,7 @@ let package = Package(
                 "SwiftDriver",
                 "llbuild2BuildSystem",
                 "llbuild2Util",
+                "SwiftPM-auto",
             ]
         ),
 
