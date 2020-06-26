@@ -27,7 +27,9 @@ public struct SwiftBuildSystemDelegate {
     public init(engineContext: LLBBuildEngineContext) {
         self.engineContext = engineContext
         self.functions = [
-            BuildRequest.identifier : BuildFunction(engineContext: engineContext)
+            BuildRequest.identifier : BuildFunction(engineContext: engineContext),
+            ManifestLookupRequest.identifier: ManifestLookupFunction(engineContext: engineContext),
+            ManifestLoaderRequest.identifier: ManifestLoaderFunction(engineContext: engineContext),
         ]
     }
 }
@@ -50,6 +52,15 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             return tree
         }
 
+        let manifestID = fi.requestManifestLookup(key.rootID)
+        let manifest = manifestID.map { manifestID in
+            ManifestLoaderRequest(manifestDataID: manifestID, packageIdentity: "foo")
+        }.flatMap {
+            fi.request($0)
+        }.map {
+            $0.manifest
+        }
+
         let sourceFile = srcTree.flatMap { tree in
             tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: db)
         }.map { result -> LLBDataID in
@@ -65,8 +76,9 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             )
         }
 
-        return sourceFile.map { file in
-            SPMTarget(
+        return manifest.and(sourceFile).map { (m, file) in
+            print(m)
+            return SPMTarget(
                 packageName: packageName,
                 name: targetName,
                 sources: [file],
