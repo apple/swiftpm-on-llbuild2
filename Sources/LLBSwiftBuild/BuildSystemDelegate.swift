@@ -62,7 +62,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         }
 
         let sourceFile = srcTree.flatMap { tree in
-            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: db)
+            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: self.db)
         }.map { result -> LLBDataID in
             guard let result = result?.id else {
                 fatalError("unable to find main.swift")
