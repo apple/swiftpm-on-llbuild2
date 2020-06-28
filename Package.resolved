@@ -32,8 +32,8 @@
         "package": "swift-driver",
         "repositoryURL": "https://github.com/apple/swift-driver.git",
         "state": {
-          "branch": "ankit/pr",
-          "revision": "dd045701316a1bd9bdcc44c7e068c46ae8fc284e",
+          "branch": "ankit/pr2",
+          "revision": "7b0f409f7d25efe92ce564500a670268b91e95a4",
           "version": null
         }
       },
