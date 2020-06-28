@@ -9,11 +9,21 @@
 import NIO
 import llbuild2
 import LLBBuildSystem
+import PackageModel
 
 extension LLBBuildFunctionInterface {
     func requestManifestLookup(_ packageID: LLBDataID, _ ctx: Context) -> LLBFuture<LLBDataID> {
         let req = ManifestLookupRequest(packageID: packageID)
         return request(req, as: ManifestLookupResult.self, ctx).map { $0.manifestID }
+    }
+
+    func requestManifest(
+        _ manifestID: LLBDataID,
+        packageIdentity: String,
+        _ ctx: Context
+    ) -> LLBFuture<Manifest> {
+        let req = ManifestLoaderRequest(manifestDataID: manifestID, packageIdentity: packageIdentity)
+        return request(req, as: ManifestLoaderResult.self, ctx).map { $0.manifest }
     }
 
     func request(_ key: ManifestLoaderRequest, _ ctx: Context) -> LLBFuture<ManifestLoaderResult> {
