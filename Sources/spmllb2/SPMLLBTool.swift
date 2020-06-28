@@ -106,8 +106,16 @@ struct SPMLLBTool: ParsableCommand {
             path: buildDir.appending(component: "cache")
         )
 
+        let executorDir = buildDir.appending(component: "local_exector")
+
+        // Avoid re-using base output since the local executor currently
+        // doesn't handle incremental source/input exports very well.
+        let executionNum: Int
+        let existingExecutionNum = (try? localFileSystem.getDirectoryContents(executorDir))?.compactMap { Int($0) }.sorted().last ?? -1
+        executionNum = existingExecutionNum + 1
+
         let executor = LLBLocalExecutor(
-            outputBase: buildDir.appending(component: "local_exector")
+            outputBase: buildDir.appending(components: "local_exector", "\(executionNum)")
         )
 
         let buildSystemDelegate = SwiftBuildSystemDelegate()
