@@ -10,6 +10,7 @@ import NIO
 import llbuild2
 import LLBBuildSystem
 import PackageModel
+import TSCBasic
 
 extension LLBBuildFunctionInterface {
     func requestManifestLookup(_ packageID: LLBDataID, _ ctx: Context) -> LLBFuture<LLBDataID> {
@@ -28,5 +29,20 @@ extension LLBBuildFunctionInterface {
 
     func request(_ key: ManifestLoaderRequest, _ ctx: Context) -> LLBFuture<ManifestLoaderResult> {
         request(key, as: ManifestLoaderResult.self, ctx)
+    }
+}
+
+extension EventLoopFuture {
+    func unwrapOptional<T>(orError error: Swift.Error) -> EventLoopFuture<T> where Value == T? {
+        self.flatMapThrowing { value in
+            guard let value = value else {
+                throw error
+            }
+            return value
+        }
+    }
+
+    func unwrapOptional<T>(orStringError error: String) -> EventLoopFuture<T> where Value == T? {
+        unwrapOptional(orError: StringError(error))
     }
 }

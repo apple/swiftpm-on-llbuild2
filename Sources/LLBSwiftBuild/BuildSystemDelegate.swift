@@ -41,17 +41,11 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         let targetName = label.targetName
 
         let client = LLBCASFSClient(ctx.db)
-        let srcTree: LLBFuture<LLBCASFileTree> = client.load(key.rootID, ctx).flatMapThrowing { node in
-            guard let tree = node.tree else {
-                throw StringError("the package root \(key.rootID) is not a directory")
-            }
-            return tree
-        }
+        let srcTree = client.load(key.rootID, ctx)
+            .map{ $0.tree }
+            .unwrapOptional(orStringError: "the package root \(key.rootID) is not a directory")
 
         let manifestID = fi.requestManifestLookup(key.rootID, ctx)
-        let manifest = manifestID.flatMap {
-            fi.requestManifest($0, packageIdentity: packageName, ctx)
-        }
 
         let package = manifestID.map {
             PackageLoaderRequest(
@@ -62,27 +56,34 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             $0.package
         }
 
-        let sourceFile = srcTree.flatMap { tree in
-            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: ctx.db, ctx)
-        }.map { result -> LLBDataID in
-            guard let result = result?.id else {
-                fatalError("unable to find main.swift")
+        let target = package.map { package in
+            package.targets.first { $0.name == targetName }
+        }
+        .unwrapOptional(orStringError: "unable to find target named \(targetName)")
+
+        let srcArtifacts: LLBFuture<[LLBArtifact]> = target.map { target in
+            target.sources.paths
+        }.and(srcTree).flatMap { (paths, srcTree) in
+            var futures: [LLBFuture<LLBArtifact>] = []
+            for path in paths {
+                let future = srcTree.lookup(path: path, in: ctx.db, ctx)
+                    .unwrapOptional(orStringError: "unable to find \(path)").map {
+                    LLBArtifact.source(
+                        shortPath: path.basename,
+                        roots: [label.asRoot, "src"],
+                        dataID: $0.id
+                    )
+                }
+                futures.append(future)
             }
-            return result
-        }.map {
-            LLBArtifact.source(
-                shortPath: "main.swift",
-                roots: [label.asRoot, "src"],
-                dataID: $0
-            )
+            return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
         }
 
-        return package.and(sourceFile).map { (m, file) in
-            print(m)
+        return srcArtifacts.map { files in
             return SPMTarget(
                 packageName: packageName,
                 name: targetName,
-                sources: [file],
+                sources: files,
                 dependencies: []
             )
         }
