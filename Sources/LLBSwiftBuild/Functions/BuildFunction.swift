@@ -39,20 +39,30 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
     ) -> LLBFuture<BuildResult> {
         let configuredTargetKey = LLBConfiguredTargetKey(
             rootID: key.rootID,
-            label: try! LLBLabel("//foo:foo")
+            label: key.targets[0]
         )
 
         let providerMap = fi.requestDependency(configuredTargetKey, ctx)
 
-        let runnable = providerMap.flatMapThrowing {
-            try $0.get(DefaultProvider.self).runnable
-        }.unwrapOptional(orStringError: "only executable targets can be built right now")
-        .flatMap {
-            fi.requestArtifact($0, ctx)
+        let allOutputs: LLBFuture<[LLBArtifactValue]> = providerMap.flatMapThrowing {
+            try $0.get(DefaultProvider.self).outputs
+        }.flatMap { outputs in
+            let futures = outputs.map { fi.requestArtifact($0, ctx) }
+            return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
         }
 
-        return runnable.map {
-            BuildResult(runnable: $0.dataID)
+        let runnable: LLBFuture<LLBArtifactValue?> = providerMap.flatMapThrowing {
+            try $0.get(DefaultProvider.self).runnable
+        }.flatMap { runnable in
+            if let runnable = runnable {
+                return fi.requestArtifact(runnable, ctx).map { $0 as LLBArtifactValue? }
+            } else {
+                return ctx.group.next().makeSucceededFuture(nil)
+            }
+        }
+
+        return allOutputs.and(runnable).map { (_, runnable) in
+            BuildResult(runnable: runnable?.dataID)
         }
     }
 }
