@@ -107,7 +107,7 @@ struct SPMLLBTool: ParsableCommand {
         )
 
         let executor = LLBLocalExecutor(
-            outputBase: buildDir.appending(component: "outputs")
+            outputBase: buildDir.appending(component: "local_exector")
         )
 
         let buildSystemDelegate = SwiftBuildSystemDelegate()
