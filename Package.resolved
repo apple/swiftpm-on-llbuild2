@@ -32,8 +32,8 @@
         "package": "swift-driver",
         "repositoryURL": "https://github.com/apple/swift-driver.git",
         "state": {
-          "branch": "master",
-          "revision": "9f297a92f46027062dd798a3f1e2a61e4dcb9b81",
+          "branch": "ankit/pr",
+          "revision": "dd045701316a1bd9bdcc44c7e068c46ae8fc284e",
           "version": null
         }
       },
@@ -50,8 +50,8 @@
         "package": "llbuild2",
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
-          "branch": "master",
-          "revision": "1ce4fd0333afb7dac2dfb12eceb97452bf028a17",
+          "branch": "ankit/pr",
+          "revision": "ec1d75c7e853ef04e50e33eae7eac21548bb7c14",
           "version": null
         }
       },

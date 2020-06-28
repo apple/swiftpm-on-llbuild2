@@ -12,6 +12,7 @@ import LLBBuildSystem
 import LLBBuildSystemUtil
 import Foundation
 import TSCBasic
+import SwiftDriver
 
 public struct SwiftExecutableTarget: LLBConfiguredTarget, Codable {
     public var targetDependencies: [String: LLBTargetDependency] {
@@ -42,20 +43,56 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         configuredTarget: SwiftExecutableTarget,
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
-        let buildDir = try ruleContext.declareDirectoryArtifact("build")
+        let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let executable = try ruleContext.declareArtifact("build/\(configuredTarget.name)")
         let sources = configuredTarget.sources
 
         var commandLine: [String] = []
         commandLine += ["swiftc"]
+        commandLine += ["-target", "x86_64-apple-macosx10.15"]
+        commandLine += ["-sdk", try darwinSDKPath()!.pathString]
         commandLine += sources.map{ $0.path }
         commandLine += ["-o", executable.path]
 
-        try ruleContext.registerAction(
-            arguments: commandLine,
-            inputs: sources,
-            outputs: [executable, buildDir]
+        var driver = try Driver(args: commandLine)
+        let jobs = try driver.planBuild()
+        let resolver = try ArgsResolver(
+            fileSystem: localFileSystem,
+            temporaryDirectory: .relative(RelativePath(tmpDir.path))
         )
+
+        // FIXME: Can we avoid this?
+        try ruleContext.registerAction(
+            arguments: ["mkdir", "-p", tmpDir.path],
+            inputs: [],
+            outputs: [tmpDir]
+        )
+
+        let existingArtifacts = sources + [executable]
+
+        func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
+            return try paths.map{
+                try $0.toLLBArtifact(
+                    ruleContext: ruleContext,
+                    tmpDir: tmpDir,
+                    existingArtifacts: existingArtifacts
+                )
+            }
+        }
+
+        for job in jobs {
+            let tool = try resolver.resolve(.path(job.tool))
+            let args = try job.commandLine.map{ try resolver.resolve($0) }
+
+            let inputs = try toLLBArtifact(job.inputs)
+            let outputs = try toLLBArtifact(job.outputs)
+
+            try ruleContext.registerAction(
+                arguments: [tool] + args,
+                inputs: inputs,
+                outputs: outputs
+            )
+        }
 
         let provider = DefaultProvider(
             targetName: configuredTarget.name,
@@ -65,5 +102,21 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         )
 
         return ruleContext.group.next().makeSucceededFuture([provider])
+    }
+}
+
+extension TypedVirtualPath {
+    func toLLBArtifact(
+        ruleContext: LLBRuleContext,
+        tmpDir: LLBArtifact,
+        existingArtifacts: [LLBArtifact]
+    ) throws -> LLBArtifact {
+        if let existingArtifact = existingArtifacts.first(where: { $0.path == file.name }) {
+            return existingArtifact
+        } else if file.isTemporary {
+            return try ruleContext.declareArtifact(tmpDir.shortPath + "/" + file.name)
+        } else {
+            return try ruleContext.declareArtifact(file.name)
+        }
     }
 }

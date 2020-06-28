@@ -60,3 +60,10 @@ extension EventLoopFuture {
         unwrapOptional(orError: StringError(error))
     }
 }
+
+func darwinSDKPath() throws -> AbsolutePath? {
+    let result = try Process.checkNonZeroExit(
+        args: "xcrun", "-sdk", "macosx", "--show-sdk-path"
+    ).spm_chomp()
+    return AbsolutePath(result)
+}
