@@ -15,7 +15,7 @@ import TSCBasic
 
 public struct SwiftBuildSystemDelegate {
     let rules: [String: LLBRule] = [
-        SPMTarget.identifier: SPMRule(),
+        SwiftExecutableTarget.identifier: SwiftExecutableRule(),
     ]
 
     let functions: [LLBBuildKeyIdentifier: LLBFunction]
@@ -80,7 +80,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         }
 
         return srcArtifacts.map { files in
-            return SPMTarget(
+            return SwiftExecutableTarget(
                 packageName: packageName,
                 name: targetName,
                 sources: files,
@@ -104,6 +104,6 @@ extension SwiftBuildSystemDelegate: LLBBuildFunctionLookupDelegate {
 
 extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
     public func registerTypes(registry: LLBSerializableRegistry) {
-        registry.register(type: SPMTarget.self)
+        registry.register(type: SwiftExecutableTarget.self)
     }
 }
