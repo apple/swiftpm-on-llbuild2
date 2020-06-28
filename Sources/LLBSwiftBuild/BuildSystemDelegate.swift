@@ -25,6 +25,7 @@ public struct SwiftBuildSystemDelegate {
             BuildRequest.identifier : BuildFunction(),
             ManifestLookupRequest.identifier: ManifestLookupFunction(),
             ManifestLoaderRequest.identifier: ManifestLoaderFunction(),
+            PackageLoaderRequest.identifier: PackageLoaderFunction(),
         ]
     }
 }
@@ -40,7 +41,6 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         let targetName = label.targetName
 
         let client = LLBCASFSClient(ctx.db)
-
         let srcTree: LLBFuture<LLBCASFileTree> = client.load(key.rootID, ctx).flatMapThrowing { node in
             guard let tree = node.tree else {
                 throw StringError("the package root \(key.rootID) is not a directory")
@@ -49,12 +49,17 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         }
 
         let manifestID = fi.requestManifestLookup(key.rootID, ctx)
-        let manifest = manifestID.map { manifestID in
-            ManifestLoaderRequest(manifestDataID: manifestID, packageIdentity: "foo")
+        let manifest = manifestID.flatMap {
+            fi.requestManifest($0, packageIdentity: packageName, ctx)
+        }
+
+        let package = manifestID.map {
+            PackageLoaderRequest(
+                manifestDataID: $0, packageIdentity: packageName, packageDataID: key.rootID)
         }.flatMap {
-            fi.request($0, ctx)
+            fi.request($0, as: PackageLoaderResult.self, ctx)
         }.map {
-            $0.manifest
+            $0.package
         }
 
         let sourceFile = srcTree.flatMap { tree in
@@ -72,7 +77,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             )
         }
 
-        return manifest.and(sourceFile).map { (m, file) in
+        return package.and(sourceFile).map { (m, file) in
             print(m)
             return SPMTarget(
                 packageName: packageName,
