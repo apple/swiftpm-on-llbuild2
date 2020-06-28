@@ -20,16 +20,11 @@ public struct SwiftBuildSystemDelegate {
 
     let functions: [LLBBuildKeyIdentifier: LLBFunction]
 
-    let engineContext: LLBBuildEngineContext
-    var db: LLBCASDatabase { engineContext.db }
-    var group: LLBFuturesDispatchGroup { engineContext.group }
-
-    public init(engineContext: LLBBuildEngineContext) {
-        self.engineContext = engineContext
+    public init() {
         self.functions = [
-            BuildRequest.identifier : BuildFunction(engineContext: engineContext),
-            ManifestLookupRequest.identifier: ManifestLookupFunction(engineContext: engineContext),
-            ManifestLoaderRequest.identifier: ManifestLoaderFunction(engineContext: engineContext),
+            BuildRequest.identifier : BuildFunction(),
+            ManifestLookupRequest.identifier: ManifestLookupFunction(),
+            ManifestLoaderRequest.identifier: ManifestLoaderFunction(),
         ]
     }
 }
@@ -37,32 +32,33 @@ public struct SwiftBuildSystemDelegate {
 extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
     public func configuredTarget(
         for key: LLBConfiguredTargetKey,
-        _ fi: LLBBuildFunctionInterface
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
     ) throws -> LLBFuture<LLBConfiguredTarget> {
         let label = key.label
         let packageName = label.logicalPathComponents[0]
         let targetName = label.targetName
 
-        let client = LLBCASFSClient(db)
+        let client = LLBCASFSClient(ctx.db)
 
-        let srcTree: LLBFuture<LLBCASFileTree> = client.load(key.rootID).flatMapThrowing { node in
+        let srcTree: LLBFuture<LLBCASFileTree> = client.load(key.rootID, ctx).flatMapThrowing { node in
             guard let tree = node.tree else {
                 throw StringError("the package root \(key.rootID) is not a directory")
             }
             return tree
         }
 
-        let manifestID = fi.requestManifestLookup(key.rootID)
+        let manifestID = fi.requestManifestLookup(key.rootID, ctx)
         let manifest = manifestID.map { manifestID in
             ManifestLoaderRequest(manifestDataID: manifestID, packageIdentity: "foo")
         }.flatMap {
-            fi.request($0)
+            fi.request($0, ctx)
         }.map {
             $0.manifest
         }
 
         let sourceFile = srcTree.flatMap { tree in
-            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: self.db)
+            tree.lookup(path: AbsolutePath("/Sources/foo/main.swift"), in: ctx.db, ctx)
         }.map { result -> LLBDataID in
             guard let result = result?.id else {
                 fatalError("unable to find main.swift")

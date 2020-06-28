@@ -45,14 +45,15 @@ public struct SPMTarget: LLBConfiguredTarget, Codable {
 class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
     override func evaluate(
         key: BuildRequest,
-        _ fi: LLBBuildFunctionInterface
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
     ) -> LLBFuture<BuildResult> {
         let configuredTargetKey = LLBConfiguredTargetKey(
             rootID: key.rootID,
             label: try! LLBLabel("//foo:foo")
         )
 
-        let providerMap = fi.requestDependency(configuredTargetKey)
+        let providerMap = fi.requestDependency(configuredTargetKey, ctx)
 
         let runnable = providerMap.flatMapThrowing {
             try $0.get(DefaultProvider.self).runnable
@@ -62,7 +63,7 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
             }
             return run
         }.flatMap {
-            fi.requestArtifact($0)
+            fi.requestArtifact($0, ctx)
         }
 
         return runnable.map {
