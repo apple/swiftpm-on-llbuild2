@@ -12,6 +12,20 @@ import LLBBuildSystem
 import PackageModel
 import TSCBasic
 
+public struct BaseTarget: Codable {
+    var name: String
+    var c99name: String
+    var sources: [LLBArtifact]
+    var dependencies: [LLBLabel]
+}
+
+public struct DefaultProvider: LLBProvider, Codable {
+    public var targetName: String
+    public var runnable: LLBArtifact?
+    public var inputs: [LLBArtifact]
+    public var outputs: [LLBArtifact]
+}
+
 extension LLBBuildFunctionInterface {
     func requestManifestLookup(_ packageID: LLBDataID, _ ctx: Context) -> LLBFuture<LLBDataID> {
         let req = ManifestLookupRequest(packageID: packageID)

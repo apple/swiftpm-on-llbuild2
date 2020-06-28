@@ -18,17 +18,23 @@ public struct SwiftExecutableTarget: LLBConfiguredTarget, Codable {
         ["dependencies": .list(dependencies)]
     }
 
-    var packageName: String
-    var name: String
-    var sources: [LLBArtifact]
-    var dependencies: [LLBLabel]
-}
+    var base: BaseTarget
+    var name: String { base.name }
+    var sources: [LLBArtifact] { base.sources }
+    var dependencies: [LLBLabel] { base.dependencies }
 
-public struct DefaultProvider: LLBProvider, Codable {
-    public var targetName: String
-    public var runnable: LLBArtifact?
-    public var inputs: [LLBArtifact]
-    public var outputs: [LLBArtifact]
+    init(
+        name: String,
+        sources: [LLBArtifact],
+        dependencies: [LLBLabel]
+    ) {
+        self.base = BaseTarget(
+            name: name,
+            c99name: name,
+            sources: sources,
+            dependencies: dependencies
+        )
+    }
 }
 
 public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {

@@ -81,7 +81,6 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
 
         return srcArtifacts.map { files in
             return SwiftExecutableTarget(
-                packageName: packageName,
                 name: targetName,
                 sources: files,
                 dependencies: []
