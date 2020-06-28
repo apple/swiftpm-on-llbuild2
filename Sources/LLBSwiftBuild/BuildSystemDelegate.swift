@@ -30,6 +30,24 @@ public struct SwiftBuildSystemDelegate {
     }
 }
 
+extension SwiftBuildSystemDelegate: LLBRuleLookupDelegate {
+    public func rule(for configuredTargetType: LLBConfiguredTarget.Type) -> LLBRule? {
+        rules[configuredTargetType.identifier]
+    }
+}
+
+extension SwiftBuildSystemDelegate: LLBBuildFunctionLookupDelegate {
+    public func lookupBuildFunction(for identifier: LLBBuildKeyIdentifier) -> LLBFunction? {
+        functions[identifier]
+    }
+}
+
+extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
+    public func registerTypes(registry: LLBSerializableRegistry) {
+        registry.register(type: SwiftExecutableTarget.self)
+    }
+}
+
 extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
     public func configuredTarget(
         for key: LLBConfiguredTargetKey,
@@ -86,23 +104,5 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                 dependencies: []
             )
         }
-    }
-}
-
-extension SwiftBuildSystemDelegate: LLBRuleLookupDelegate {
-    public func rule(for configuredTargetType: LLBConfiguredTarget.Type) -> LLBRule? {
-        rules[configuredTargetType.identifier]
-    }
-}
-
-extension SwiftBuildSystemDelegate: LLBBuildFunctionLookupDelegate {
-    public func lookupBuildFunction(for identifier: LLBBuildKeyIdentifier) -> LLBFunction? {
-        functions[identifier]
-    }
-}
-
-extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
-    public func registerTypes(registry: LLBSerializableRegistry) {
-        registry.register(type: SwiftExecutableTarget.self)
     }
 }

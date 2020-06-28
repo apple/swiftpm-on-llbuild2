@@ -46,12 +46,8 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
 
         let runnable = providerMap.flatMapThrowing {
             try $0.get(DefaultProvider.self).runnable
-        }.flatMapThrowing { runnable -> LLBArtifact in
-            guard let run = runnable else {
-                throw StringError("only executable targets can be built right now")
-            }
-            return run
-        }.flatMap {
+        }.unwrapOptional(orStringError: "only executable targets can be built right now")
+        .flatMap {
             fi.requestArtifact($0, ctx)
         }
 
