@@ -10,17 +10,13 @@ import NIO
 import llbuild2
 import LLBBuildSystem
 
-extension LLBBuildFunction {
-    var db: LLBCASDatabase { engineContext.db }
-}
-
 extension LLBBuildFunctionInterface {
-    func requestManifestLookup(_ packageID: LLBDataID) -> LLBFuture<LLBDataID> {
+    func requestManifestLookup(_ packageID: LLBDataID, _ ctx: Context) -> LLBFuture<LLBDataID> {
         let req = ManifestLookupRequest(packageID: packageID)
-        return request(req, as: ManifestLookupResult.self).map { $0.manifestID }
+        return request(req, as: ManifestLookupResult.self, ctx).map { $0.manifestID }
     }
 
-    func request(_ key: ManifestLoaderRequest) -> LLBFuture<ManifestLoaderResult> {
-        request(key, as: ManifestLoaderResult.self)
+    func request(_ key: ManifestLoaderRequest, _ ctx: Context) -> LLBFuture<ManifestLoaderResult> {
+        request(key, as: ManifestLoaderResult.self, ctx)
     }
 }

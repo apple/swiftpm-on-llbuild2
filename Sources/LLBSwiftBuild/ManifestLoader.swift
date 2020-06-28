@@ -27,18 +27,19 @@ struct ManifestLoaderResult: LLBBuildValue, Codable {
 class ManifestLoaderFunction: LLBBuildFunction<ManifestLoaderRequest, ManifestLoaderResult> {
     override func evaluate(
         key: ManifestLoaderRequest,
-        _ fi: LLBBuildFunctionInterface
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
     ) -> LLBFuture<ManifestLoaderResult> {
         let manifestDataID = key.manifestDataID
-        let client = LLBCASFSClient(db)
+        let client = LLBCASFSClient(ctx.db)
 
-        let manifest = client.load(manifestDataID).flatMapThrowing { node -> LLBCASBlob in
+        let manifest = client.load(manifestDataID, ctx).flatMapThrowing { node -> LLBCASBlob in
             if let blob = node.blob {
                 return blob
             }
             throw StringError("Could not load manifest blob for \(key)")
         }.flatMap {
-            $0.read()
+            $0.read(ctx)
         }.flatMapThrowing {
             try self.loadManifest(
                 contents: ByteString($0),
@@ -95,11 +96,12 @@ struct ManifestLookupResult: LLBBuildValue, Codable {
 class ManifestLookupFunction: LLBBuildFunction<ManifestLookupRequest, ManifestLookupResult> {
     override func evaluate(
         key: ManifestLookupRequest,
-        _ fi: LLBBuildFunctionInterface
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
     ) -> LLBFuture<ManifestLookupResult> {
-        let client = LLBCASFSClient(db)
+        let client = LLBCASFSClient(ctx.db)
 
-        let packageTree = client.load(key.packageID).flatMapThrowing { node -> LLBCASFileTree in
+        let packageTree = client.load(key.packageID, ctx).flatMapThrowing { node -> LLBCASFileTree in
             if let tree = node.tree {
                 return tree
             }

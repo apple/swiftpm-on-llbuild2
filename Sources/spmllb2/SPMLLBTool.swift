@@ -38,11 +38,13 @@ struct SPMLLBTool: ParsableCommand {
     func run() throws {
         let rootID: LLBDataID
 
+        let ctx = Context()
+
         let packagePath = try options.getPackagePath()
         if let rootID_ = self.rootID.flatMap({ LLBDataID(string: $0) }) {
             rootID = rootID_
         } else {
-            rootID = try importDir(path: packagePath)
+            rootID = try importDir(path: packagePath, ctx)
         }
         print("root id:", rootID)
 
@@ -54,7 +56,7 @@ struct SPMLLBTool: ParsableCommand {
             targets: try self.targets.map{ try LLBLabel($0) }
         )
 
-        let result = try engine.build(request, as: BuildResult.self).wait()
+        let result = try engine.build(request, as: BuildResult.self, ctx).wait()
         guard let executable = result.runnable else {
             throw StringError("expected runnable output from the target")
         }
@@ -68,12 +70,13 @@ struct SPMLLBTool: ParsableCommand {
         try LLBCASFileTree.export(
             executable,
             from: db,
-            to: exec
+            to: exec,
+            ctx
         ).wait()
         print(try Process.checkNonZeroExit(arguments: [exec.pathString]))
     }
 
-    func importDir(path: AbsolutePath) throws -> LLBDataID {
+    func importDir(path: AbsolutePath, _ ctx: Context) throws -> LLBDataID {
         let db = try options.db()
 
         var opts = LLBCASFileTree.ImportOptions()
@@ -89,7 +92,8 @@ struct SPMLLBTool: ParsableCommand {
             path: path,
             to: db,
             options: opts,
-            stats: progress
+            stats: progress,
+            ctx
         ).wait()
     }
 
@@ -106,17 +110,11 @@ struct SPMLLBTool: ParsableCommand {
             outputBase: buildDir.appending(component: "outputs")
         )
 
-        let engineContext = LLBBasicBuildEngineContext(
-            group: group,
-            db: db,
-            executor: executor
-        )
-        let buildSystemDelegate = SwiftBuildSystemDelegate(
-            engineContext: engineContext
-        )
+        let buildSystemDelegate = SwiftBuildSystemDelegate()
 
         return LLBBuildEngine(
-            engineContext: engineContext,
+            group: group,
+            db: db,
             buildFunctionLookupDelegate: buildSystemDelegate,
             configuredTargetDelegate: buildSystemDelegate,
             ruleLookupDelegate: buildSystemDelegate,
