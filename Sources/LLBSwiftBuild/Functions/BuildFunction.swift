@@ -38,7 +38,18 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         _ fi: LLBBuildFunctionInterface,
         _ ctx: Context
     ) -> LLBFuture<[LLBLabel]> {
-        ctx.group.next().makeFailedFuture(StringError("unable to currently auto detect targets, use --target"))
+        let rootPackage = key.rootID
+        let packageIdentity = "foo"
+
+        let manifestID = fi.requestManifestLookup(rootPackage, ctx)
+        let manifest = manifestID.flatMap {
+            fi.requestManifest($0, packageIdentity: packageIdentity, ctx)
+        }
+
+        return manifest.flatMapThrowing { manifest in
+            let mainTargets = manifest.targets.filter{ $0.type == .regular }.map{ $0.name }
+            return try mainTargets.map { try LLBLabel("//\(packageIdentity):\($0)") }
+        }
     }
 
     override func evaluate(
