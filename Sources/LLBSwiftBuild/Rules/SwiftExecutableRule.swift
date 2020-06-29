@@ -6,13 +6,13 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
-import TSCBasic
+import NIO
 import SwiftDriver
+import TSCBasic
+import llbuild2
 
 public struct SwiftExecutableTarget: LLBConfiguredTarget, Codable {
     public var targetDependencies: [String: LLBTargetDependency] {
@@ -44,10 +44,10 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
         let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
-        let swiftmoduleDeps = dependencies.compactMap{ $0.swiftmodule }
-        let dependencyObjects = dependencies.flatMap{ $0.objects }
+        let swiftmoduleDeps = dependencies.compactMap { $0.swiftmodule }
+        let dependencyObjects = dependencies.flatMap { $0.objects }
         // FIXME: We can do a little better and avoid adding dependency objects in the global dependencies because that will block the non-linking jobs from starting.
-        let globalDependencies = dependencies.flatMap{ $0.outputs } + swiftmoduleDeps + dependencyObjects
+        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps + dependencyObjects
 
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let executable = try ruleContext.declareArtifact("build/\(configuredTarget.name)")
@@ -58,9 +58,9 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         commandLine += ["-target", "x86_64-apple-macosx10.15"]
         commandLine += ["-sdk", try darwinSDKPath()!.pathString]
         // FIXME: RelativePath needs parentDirectory.
-        commandLine += swiftmoduleDeps.flatMap{ ["-I", RelativePath($0.path).dirname] }
-        commandLine += sources.map{ $0.path }
-        commandLine += dependencyObjects.map{ $0.path }
+        commandLine += swiftmoduleDeps.flatMap { ["-I", RelativePath($0.path).dirname] }
+        commandLine += sources.map { $0.path }
+        commandLine += dependencyObjects.map { $0.path }
         commandLine += ["-o", executable.path]
 
         var driver = try Driver(args: commandLine)
@@ -80,7 +80,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         let existingArtifacts = sources + [executable] + dependencyObjects
 
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
-            return try paths.map{
+            return try paths.map {
                 try $0.toLLBArtifact(
                     ruleContext: ruleContext,
                     tmpDir: tmpDir,
@@ -91,7 +91,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
 
         for job in jobs {
             let tool = try resolver.resolve(.path(job.tool))
-            let args = try job.commandLine.map{ try resolver.resolve($0) }
+            let args = try job.commandLine.map { try resolver.resolve($0) }
 
             let inputs = try toLLBArtifact(job.inputs)
             let outputs = try toLLBArtifact(job.outputs)

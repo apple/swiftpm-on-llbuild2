@@ -6,12 +6,12 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
+import NIO
 import TSCBasic
+import llbuild2
 
 public struct SwiftBuildSystemDelegate {
     let rules: [String: LLBRule] = [
@@ -23,7 +23,7 @@ public struct SwiftBuildSystemDelegate {
 
     public init() {
         self.functions = [
-            BuildRequest.identifier : BuildFunction(),
+            BuildRequest.identifier: BuildFunction(),
             ManifestLookupRequest.identifier: ManifestLookupFunction(),
             ManifestLoaderRequest.identifier: ManifestLoaderFunction(),
             PackageLoaderRequest.identifier: PackageLoaderFunction(),
@@ -62,7 +62,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
 
         let client = LLBCASFSClient(ctx.db)
         let srcTree = client.load(key.rootID, ctx)
-            .map{ $0.tree }
+            .map { $0.tree }
             .unwrapOptional(orStringError: "the package root \(key.rootID) is not a directory")
 
         let manifestID = fi.requestManifestLookup(key.rootID, ctx)
@@ -96,12 +96,12 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             for path in paths {
                 let future = srcTree.lookup(path: path, in: ctx.db, ctx)
                     .unwrapOptional(orStringError: "unable to find \(path)").map {
-                    LLBArtifact.source(
-                        shortPath: path.basename,
-                        roots: [label.asRoot, "src"],
-                        dataID: $0.id
-                    )
-                }
+                        LLBArtifact.source(
+                            shortPath: path.basename,
+                            roots: [label.asRoot, "src"],
+                            dataID: $0.id
+                        )
+                    }
                 futures.append(future)
             }
             return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
@@ -122,7 +122,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                     if manifest.targetMap.keys.contains(name) {
                         dependencies += [try LLBLabel("//\(packageName):\(name)")]
                     }
-                    // FIXME: handle dependencies outside of this package.
+                // FIXME: handle dependencies outside of this package.
 
                 case .product:
                     // FIXME: handle products dependencies.

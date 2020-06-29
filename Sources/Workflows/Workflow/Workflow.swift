@@ -79,7 +79,7 @@ public struct Execute: Workflow, PrimitiveWorkflow {
     public var _data: [String: String] {
         [
             "output": outputs.joined(separator: " "),
-            "args": args.joined(separator: " ")
+            "args": args.joined(separator: " "),
         ]
     }
 }
@@ -196,4 +196,3 @@ extension PrimitiveWorkflow {
         fatalError("body() should not be called on \(Self.self).")
     }
 }
-
