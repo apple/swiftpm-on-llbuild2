@@ -22,7 +22,7 @@ public struct BaseTarget: Codable {
 public struct DefaultProvider: LLBProvider, Codable {
     public var targetName: String
     public var runnable: LLBArtifact?
-    public var inputs: [LLBArtifact]
+    public var swiftmodule: LLBArtifact?
     public var outputs: [LLBArtifact]
 }
 

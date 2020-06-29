@@ -46,6 +46,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
 
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
+        let swiftmodule = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftmodule")
+        let swiftdoc = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftdoc")
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
 
@@ -64,6 +66,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["-target", "x86_64-apple-macosx10.15"]
         commandLine += ["-sdk", try darwinSDKPath()!.pathString]
         commandLine += ["-module-name", configuredTarget.base.c99name]
+        commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
+        commandLine += ["-emit-module-doc-path", swiftdoc.path]
         commandLine += ["-parse-as-library", "-c"]
         commandLine += sources.map{ $0.path }
 
@@ -81,7 +85,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputs: [tmpDir]
         )
 
-        let existingArtifacts = sources + [objectFile] + objects
+        let existingArtifacts = sources + objects + [objectFile, swiftmodule, swiftdoc]
 
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
             return try paths.map{
@@ -92,6 +96,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
                 )
             }
         }
+
+        let globalDependencies = dependencies.flatMap{ $0.outputs } + dependencies.compactMap{ $0.swiftmodule }
 
         var allObjectFiles: [LLBArtifact] = []
         for job in jobs {
@@ -114,7 +120,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
 
             try ruleContext.registerAction(
                 arguments: [tool] + args,
-                inputs: inputs + dependencies.flatMap{ $0.outputs },
+                inputs: inputs + globalDependencies,
                 outputs: outputs
             )
         }
@@ -131,7 +137,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let provider = DefaultProvider(
             targetName: configuredTarget.name,
             runnable: nil,
-            inputs: sources,
+            swiftmodule: swiftmodule,
             outputs: [objectFile]
         )
 

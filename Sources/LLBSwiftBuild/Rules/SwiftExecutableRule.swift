@@ -82,6 +82,8 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
             }
         }
 
+        let globalDependencies = dependencies.flatMap{ $0.outputs } + dependencies.compactMap{ $0.swiftmodule }
+
         for job in jobs {
             let tool = try resolver.resolve(.path(job.tool))
             let args = try job.commandLine.map{ try resolver.resolve($0) }
@@ -91,7 +93,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
 
             try ruleContext.registerAction(
                 arguments: [tool] + args,
-                inputs: inputs + dependencies.flatMap{ $0.outputs },
+                inputs: inputs + globalDependencies,
                 outputs: outputs
             )
         }
@@ -99,7 +101,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         let provider = DefaultProvider(
             targetName: configuredTarget.name,
             runnable: executable,
-            inputs: sources,
+            swiftmodule: nil,
             outputs: [executable]
         )
 
@@ -113,12 +115,15 @@ extension TypedVirtualPath {
         tmpDir: LLBArtifact,
         existingArtifacts: [LLBArtifact]
     ) throws -> LLBArtifact {
+        let artifact: LLBArtifact
         if let existingArtifact = existingArtifacts.first(where: { $0.path == file.name }) {
-            return existingArtifact
+            artifact = existingArtifact
         } else if file.isTemporary {
-            return try ruleContext.declareArtifact(tmpDir.shortPath + "/" + file.name)
+            artifact = try ruleContext.declareArtifact(tmpDir.shortPath + "/" + file.name)
         } else {
-            return try ruleContext.declareArtifact(file.name)
+            artifact = try ruleContext.declareArtifact(file.name)
+            print("declared \(self.file) \(artifact.path)")
         }
+        return artifact
     }
 }
