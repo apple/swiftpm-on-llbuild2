@@ -23,6 +23,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
     var name: String { base.name }
     var sources: [LLBArtifact] { base.sources }
     var dependencies: [LLBLabel] { base.dependencies }
+    var includeDir: LLBArtifact?
 
     // FIXME: This is obviously wrong.
     var moduleMap: AbsolutePath
@@ -31,6 +32,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
         name: String,
         sources: [LLBArtifact],
         dependencies: [LLBLabel],
+        includeDir: LLBArtifact?,
         cTarget: ClangTarget
     ) {
         self.base = BaseTarget(
@@ -39,6 +41,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
             sources: sources,
             dependencies: dependencies
         )
+        self.includeDir = includeDir
         self.moduleMap = cTarget.moduleMapPath
     }
 }
