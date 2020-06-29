@@ -37,21 +37,38 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         _ fi: LLBBuildFunctionInterface,
         _ ctx: Context
     ) -> LLBFuture<BuildResult> {
-        let configuredTargetKey = LLBConfiguredTargetKey(
-            rootID: key.rootID,
-            label: key.targets[0]
-        )
 
-        let providerMap = fi.requestDependency(configuredTargetKey, ctx)
-
-        let allOutputs: LLBFuture<[LLBArtifactValue]> = providerMap.flatMapThrowing {
-            try $0.get(DefaultProvider.self).outputs
-        }.flatMap { outputs in
-            let futures = outputs.map { fi.requestArtifact($0, ctx) }
-            return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
+        let configuredTargetKeys = key.targets.map {
+            LLBConfiguredTargetKey(
+                rootID: key.rootID,
+                label: $0
+            )
         }
 
-        let runnable: LLBFuture<LLBArtifactValue?> = providerMap.flatMapThrowing {
+        let providerMaps = configuredTargetKeys.map{ fi.requestDependency($0, ctx) }
+        let allArtifactsFuture = providerMaps.map {
+            artifacts(for: $0, fi, ctx)
+        }
+        let allArtifacts = LLBFuture.whenAllSucceed(allArtifactsFuture, on: ctx.group.next())
+            .map{ $0.flatMap{ $0 } }
+
+        let allRunnablesFuture = providerMaps.map {
+            runnable(for: $0, fi, ctx)
+        }
+        let allRunnables = LLBFuture.whenAllSucceed(allRunnablesFuture, on: ctx.group.next())
+            .map{ $0.compactMap{ $0 } }
+
+        return allArtifacts.and(allRunnables).map { (_, runnables) in
+            BuildResult(runnable: runnables.first?.dataID)
+        }
+    }
+
+    func runnable(
+        for providerMap: LLBFuture<LLBProviderMap>,
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
+    ) -> LLBFuture<LLBArtifactValue?> {
+        providerMap.flatMapThrowing {
             try $0.get(DefaultProvider.self).runnable
         }.flatMap { runnable in
             if let runnable = runnable {
@@ -60,9 +77,18 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
                 return ctx.group.next().makeSucceededFuture(nil)
             }
         }
+    }
 
-        return allOutputs.and(runnable).map { (_, runnable) in
-            BuildResult(runnable: runnable?.dataID)
+    func artifacts(
+        for providerMap: LLBFuture<LLBProviderMap>,
+        _ fi: LLBBuildFunctionInterface,
+        _ ctx: Context
+    ) -> LLBFuture<[LLBArtifactValue]> {
+        providerMap.flatMapThrowing {
+            try $0.get(DefaultProvider.self).outputs
+        }.flatMap { outputs in
+            let futures = outputs.map { fi.requestArtifact($0, ctx) }
+            return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
         }
     }
 }

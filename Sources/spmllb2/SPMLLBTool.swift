@@ -26,8 +26,8 @@ struct SPMLLBTool: ParsableCommand {
     @OptionGroup()
     var options: Options
 
-    @Option()
-    var targets: [String] = ["//foo:foo"]
+    @Option(name: .customLong("target"))
+    var targets: [String] = []
 
     @Option()
     var rootID: String?
