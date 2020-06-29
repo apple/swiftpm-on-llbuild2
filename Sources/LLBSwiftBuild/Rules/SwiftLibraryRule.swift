@@ -44,7 +44,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
         let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
-
+        let cImportPaths = dependencies.flatMap { $0.cImportPaths }
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let swiftmodule = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftmodule")
         let swiftdoc = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftdoc")
@@ -65,6 +65,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["swiftc"]
         commandLine += ["-target", "x86_64-apple-macosx10.15"]
         commandLine += ["-sdk", try darwinSDKPath()!.pathString]
+        commandLine += ["-DSWIFT_PACKAGE"]
+        commandLine += cImportPaths.flatMap { ["-I", $0] }
         commandLine += ["-module-name", configuredTarget.base.c99name]
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
@@ -134,12 +136,14 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputs: [objectFile]
         )
 
+        let allObjects = dependencies.flatMap { $0.objects }
         let provider = DefaultProvider(
             targetName: configuredTarget.name,
             runnable: nil,
             swiftmodule: swiftmodule,
-            objects: [objectFile],
-            outputs: [objectFile]
+            cImportPaths: cImportPaths,
+            objects: allObjects + [objectFile],
+            outputs: allObjects + [objectFile]
         )
 
         return ruleContext.group.next().makeSucceededFuture([provider])

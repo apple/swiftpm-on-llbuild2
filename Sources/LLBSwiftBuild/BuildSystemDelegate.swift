@@ -10,6 +10,7 @@ import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
 import NIO
+import PackageModel
 import TSCBasic
 import llbuild2
 
@@ -17,6 +18,7 @@ public struct SwiftBuildSystemDelegate {
     let rules: [String: LLBRule] = [
         SwiftExecutableTarget.identifier: SwiftExecutableRule(),
         SwiftLibraryTarget.identifier: SwiftLibraryRule(),
+        CLibraryTarget.identifier: CLibraryRule(),
     ]
 
     let functions: [LLBBuildKeyIdentifier: LLBFunction]
@@ -47,6 +49,7 @@ extension SwiftBuildSystemDelegate: LLBSerializableRegistrationDelegate {
     public func registerTypes(registry: LLBSerializableRegistry) {
         registry.register(type: SwiftExecutableTarget.self)
         registry.register(type: SwiftLibraryTarget.self)
+        registry.register(type: CLibraryTarget.self)
     }
 }
 
@@ -138,6 +141,15 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                     dependencies: dependencies
                 )
             case .library:
+                if let cTarget = target as? ClangTarget {
+                    return CLibraryTarget(
+                        name: cTarget.c99name,
+                        sources: files,
+                        dependencies: dependencies,
+                        cTarget: cTarget
+                    )
+                }
+
                 return SwiftLibraryTarget(
                     name: targetName,
                     sources: files,
