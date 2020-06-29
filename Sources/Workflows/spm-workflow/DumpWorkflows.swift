@@ -6,10 +6,10 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import TSCUtility
-import TSCBasic
 import ArgumentParser
 import Foundation
+import TSCBasic
+import TSCUtility
 import Workflow
 
 struct DumpWorkflows: ParsableCommand {
@@ -32,9 +32,9 @@ struct DumpWorkflows: ParsableCommand {
             moduleDirectory: moduleDir
         )
 
-        let workflowConformers = graph.relationships.filter{
+        let workflowConformers = graph.relationships.filter {
             $0.kind == "conformsTo" && $0.target == "s:8WorkflowAAP"
-        }.map{ $0.source }
+        }.map { $0.source }
 
         let workflows = graph.symbols.filter {
             // We only support structs.
@@ -129,7 +129,7 @@ let swiftCompiler: AbsolutePath = {
 let sdkRoot: AbsolutePath = {
     let string = try! Process.checkNonZeroExit(
         arguments: [
-            "xcrun", "--sdk", "macosx", "--show-sdk-path"
+            "xcrun", "--sdk", "macosx", "--show-sdk-path",
         ]
     ).spm_chomp()
     return AbsolutePath(string)

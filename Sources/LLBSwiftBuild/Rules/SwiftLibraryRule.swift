@@ -6,13 +6,13 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
-import TSCBasic
+import NIO
 import SwiftDriver
+import TSCBasic
+import llbuild2
 
 public struct SwiftLibraryTarget: LLBConfiguredTarget, Codable {
     public var targetDependencies: [String: LLBTargetDependency] {
@@ -69,7 +69,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
         commandLine += ["-parse-as-library", "-c"]
-        commandLine += sources.map{ $0.path }
+        commandLine += sources.map { $0.path }
 
         var driver = try Driver(args: commandLine, outputFileMap: outputFileMap)
         let jobs = try driver.planBuild()
@@ -88,7 +88,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let existingArtifacts = sources + objects + [objectFile, swiftmodule, swiftdoc]
 
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
-            return try paths.map{
+            return try paths.map {
                 try $0.toLLBArtifact(
                     ruleContext: ruleContext,
                     tmpDir: tmpDir,
@@ -97,18 +97,18 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             }
         }
 
-        let globalDependencies = dependencies.flatMap{ $0.outputs } + dependencies.compactMap{ $0.swiftmodule }
+        let globalDependencies = dependencies.flatMap { $0.outputs } + dependencies.compactMap { $0.swiftmodule }
 
         var allObjectFiles: [LLBArtifact] = []
         for job in jobs {
             let tool = try resolver.resolve(.path(job.tool))
-            let args = try job.commandLine.map{ try resolver.resolve($0) }
+            let args = try job.commandLine.map { try resolver.resolve($0) }
 
             let inputs = try toLLBArtifact(job.inputs)
             let outputs = try toLLBArtifact(job.outputs)
 
             let objects = try job.outputs
-                .filter{ $0.type == .object }
+                .filter { $0.type == .object }
                 .map {
                     try $0.toLLBArtifact(
                         ruleContext: ruleContext,
@@ -126,7 +126,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         }
 
         var linkCommandLine = ["ld", "-r"]
-        linkCommandLine += allObjectFiles.map{ $0.path }
+        linkCommandLine += allObjectFiles.map { $0.path }
         linkCommandLine += ["-o", objectFile.path]
         try ruleContext.registerAction(
             arguments: linkCommandLine,

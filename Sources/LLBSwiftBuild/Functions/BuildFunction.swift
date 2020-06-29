@@ -6,12 +6,12 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
+import NIO
 import TSCBasic
+import llbuild2
 
 public struct BuildRequest: Codable, LLBBuildKey, Hashable {
     public var targets: [LLBLabel]
@@ -47,7 +47,7 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         }
 
         return manifest.flatMapThrowing { manifest in
-            let mainTargets = manifest.targets.filter{ $0.type == .regular }.map{ $0.name }
+            let mainTargets = manifest.targets.filter { $0.type == .regular }.map { $0.name }
             return try mainTargets.map { try LLBLabel("//\(packageIdentity):\($0)") }
         }
     }
@@ -73,7 +73,7 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
             }
         }
 
-        let providerMaps: LLBFuture<[LLBProviderMap]> = configuredTargetKeys.flatMap{ keys in
+        let providerMaps: LLBFuture<[LLBProviderMap]> = configuredTargetKeys.flatMap { keys in
             let deps = keys.map { fi.requestDependency($0, ctx) }
             return LLBFuture.whenAllSucceed(deps, on: ctx.group.next())
         }
@@ -118,4 +118,3 @@ class BuildFunction: LLBBuildFunction<BuildRequest, BuildResult> {
         }
     }
 }
-

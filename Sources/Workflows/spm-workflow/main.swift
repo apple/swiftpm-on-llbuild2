@@ -12,7 +12,7 @@ struct WorkflowTool: ParsableCommand {
     public static let configuration = CommandConfiguration(
         commandName: "spm-workflow",
         subcommands: [
-            DumpWorkflows.self,
+            DumpWorkflows.self
         ]
     )
 }

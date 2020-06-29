@@ -6,11 +6,11 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
 import LLBBuildSystem
+import NIO
 import PackageModel
 import TSCBasic
+import llbuild2
 
 public struct BaseTarget: Codable {
     var name: String

@@ -6,14 +6,14 @@
 // See http://swift.org/LICENSE.txt for license information
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
-import TSCBasic
+import NIO
 import PackageLoading
 import PackageModel
+import TSCBasic
+import llbuild2
 
 struct ManifestLoaderRequest: Codable, LLBBuildKey, Hashable {
     var manifestDataID: LLBDataID
@@ -114,7 +114,6 @@ class ManifestLookupFunction: LLBBuildFunction<ManifestLookupRequest, ManifestLo
             }
             throw StringError("could not find \(Manifest.filename) for \(key)")
         }
-
 
         return packageManifestID.map {
             ManifestLookupResult(manifestID: $0)

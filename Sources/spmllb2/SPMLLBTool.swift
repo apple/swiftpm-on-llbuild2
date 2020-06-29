@@ -7,20 +7,19 @@
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
 import ArgumentParser
-import NIO
-import llbuild2
+import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import Foundation
-import TSCBasic
-import LLBSwiftBuild
-import TSCLibc
 import LLBCASFileTree
+import LLBSwiftBuild
+import NIO
+import TSCBasic
+import TSCLibc
+import llbuild2
 
 struct SPMLLBTool: ParsableCommand {
     static let configuration = CommandConfiguration(
-        subcommands: [
-        ]
+        subcommands: []
     )
 
     @OptionGroup()
@@ -53,7 +52,7 @@ struct SPMLLBTool: ParsableCommand {
 
         let request = BuildRequest(
             rootID: rootID,
-            targets: try self.targets.map{ try LLBLabel($0) }
+            targets: try self.targets.map { try LLBLabel($0) }
         )
 
         let result = try engine.build(request, as: BuildResult.self, ctx).wait()
@@ -111,7 +110,8 @@ struct SPMLLBTool: ParsableCommand {
         // Avoid re-using base output since the local executor currently
         // doesn't handle incremental source/input exports very well.
         let executionNum: Int
-        let existingExecutionNum = (try? localFileSystem.getDirectoryContents(executorDir))?.compactMap { Int($0) }.sorted().last ?? -1
+        let existingExecutionNum =
+            (try? localFileSystem.getDirectoryContents(executorDir))?.compactMap { Int($0) }.sorted().last ?? -1
         executionNum = existingExecutionNum + 1
 
         let executor = LLBLocalExecutor(
@@ -135,7 +135,7 @@ struct SPMLLBTool: ParsableCommand {
 }
 
 extension SPMLLBTool: LLBLocalExecutorDelegate {
-    func launchingProcess(arguments: [String], workingDir: AbsolutePath, environment: [String : String]) {
+    func launchingProcess(arguments: [String], workingDir: AbsolutePath, environment: [String: String]) {
         print(arguments.joined(separator: " "))
     }
 
