@@ -67,6 +67,14 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
 
         let manifestID = fi.requestManifestLookup(key.rootID, ctx)
 
+        let manifest = manifestID.flatMap {
+            fi.requestManifest(
+                $0,
+                packageIdentity: packageName,
+                ctx
+            )
+        }
+
         let package = manifestID.map {
             PackageLoaderRequest(
                 manifestDataID: $0, packageIdentity: packageName, packageDataID: key.rootID)
@@ -99,12 +107,45 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
         }
 
-        return srcArtifacts.map { files in
-            return SwiftLibraryTarget(
-                name: targetName,
-                sources: files,
-                dependencies: []
-            )
+        return manifest.and(target).and(srcArtifacts).flatMapThrowing { (manifestAndTarget, files) in
+            let manifest = manifestAndTarget.0
+            let manifestTarget = manifest.targetMap[targetName]!
+            let target = manifestAndTarget.1
+
+            var dependencies: [LLBLabel] = []
+            for dependency in manifestTarget.dependencies {
+                switch dependency {
+                case .target(let name, _):
+                    dependencies += [try LLBLabel("//\(packageName):\(name)")]
+
+                case .byName(let name, _):
+                    if manifest.targetMap.keys.contains(name) {
+                        dependencies += [try LLBLabel("//\(packageName):\(name)")]
+                    }
+                    // FIXME: handle dependencies outside of this package.
+
+                case .product:
+                    // FIXME: handle products dependencies.
+                    break
+                }
+            }
+
+            switch target.type {
+            case .executable:
+                return SwiftExecutableTarget(
+                    name: targetName,
+                    sources: files,
+                    dependencies: dependencies
+                )
+            case .library:
+                return SwiftLibraryTarget(
+                    name: targetName,
+                    sources: files,
+                    dependencies: dependencies
+                )
+            case .systemModule, .test, .binary:
+                throw StringError("unsupported target \(target) \(target.type)")
+            }
         }
     }
 }
