@@ -43,6 +43,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         configuredTarget: SwiftLibraryTarget,
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
+        let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
+
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
@@ -112,7 +114,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
 
             try ruleContext.registerAction(
                 arguments: [tool] + args,
-                inputs: inputs,
+                inputs: inputs + dependencies.flatMap{ $0.outputs },
                 outputs: outputs
             )
         }
