@@ -138,6 +138,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             targetName: configuredTarget.name,
             runnable: nil,
             swiftmodule: swiftmodule,
+            objects: [objectFile],
             outputs: [objectFile]
         )
 
