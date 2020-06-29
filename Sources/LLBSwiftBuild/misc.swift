@@ -69,3 +69,28 @@ func darwinSDKPath() throws -> AbsolutePath? {
     ).spm_chomp()
     return AbsolutePath(result)
 }
+
+func sdkPlatformFrameworkPaths(
+    environment: [String: String] = ProcessEnv.vars
+) -> (fwk: AbsolutePath, lib: AbsolutePath)? {
+    if let path = _sdkPlatformFrameworkPath {
+        return path
+    }
+    let platformPath = try? Process.checkNonZeroExit(
+        arguments: ["/usr/bin/xcrun", "--sdk", "macosx", "--show-sdk-platform-path"],
+        environment: environment).spm_chomp()
+
+    if let platformPath = platformPath, !platformPath.isEmpty {
+        // For XCTest framework.
+        let fwk = AbsolutePath(platformPath).appending(
+            components: "Developer", "Library", "Frameworks")
+
+        // For XCTest Swift library.
+        let lib = AbsolutePath(platformPath).appending(
+            components: "Developer", "usr", "lib")
+
+        _sdkPlatformFrameworkPath = (fwk, lib)
+    }
+    return _sdkPlatformFrameworkPath
+}
+fileprivate var _sdkPlatformFrameworkPath: (fwk: AbsolutePath, lib: AbsolutePath)? = nil

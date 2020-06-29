@@ -44,6 +44,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
         let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
+        let swiftmoduleDeps = dependencies.compactMap { $0.swiftmodule }
+
         let cImportPaths = dependencies.flatMap { $0.cImportPaths }
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let swiftmodule = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftmodule")
@@ -66,12 +68,20 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["-target", "x86_64-apple-macosx10.15"]
         commandLine += ["-sdk", try darwinSDKPath()!.pathString]
         commandLine += ["-DSWIFT_PACKAGE"]
+        // FIXME: RelativePath needs parentDirectory.
+        commandLine += swiftmoduleDeps.flatMap { ["-I", RelativePath($0.path).dirname] }
         commandLine += cImportPaths.flatMap { ["-I", $0] }
         commandLine += ["-module-name", configuredTarget.base.c99name]
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
         commandLine += ["-parse-as-library", "-c"]
         commandLine += sources.map { $0.path }
+
+        if let sdkPaths = sdkPlatformFrameworkPaths() {
+            commandLine += ["-F", sdkPaths.fwk.pathString]
+            commandLine += ["-I", sdkPaths.lib.pathString]
+            commandLine += ["-L", sdkPaths.lib.pathString]
+        }
 
         var driver = try Driver(args: commandLine, outputFileMap: outputFileMap)
         let jobs = try driver.planBuild()
@@ -99,7 +109,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             }
         }
 
-        let globalDependencies = dependencies.flatMap { $0.outputs } + dependencies.compactMap { $0.swiftmodule }
+        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps
 
         var allObjectFiles: [LLBArtifact] = []
         for job in jobs {
