@@ -43,6 +43,8 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         configuredTarget: SwiftExecutableTarget,
         _ ruleContext: LLBRuleContext
     ) throws -> LLBFuture<[LLBProvider]> {
+        let dependencies: [DefaultProvider] = try ruleContext.providers(for: "dependencies")
+
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let executable = try ruleContext.declareArtifact("build/\(configuredTarget.name)")
         let sources = configuredTarget.sources
@@ -89,7 +91,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
 
             try ruleContext.registerAction(
                 arguments: [tool] + args,
-                inputs: inputs,
+                inputs: inputs + dependencies.flatMap{ $0.outputs },
                 outputs: outputs
             )
         }
