@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.0.1"),
         .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
-        .package(url: "https://github.com/apple/swift-llbuild2.git", .branch("ankit/pr")),
+        .package(url: "https://github.com/apple/swift-llbuild2.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-driver.git", .branch("ankit/pr2")),
         .package(url: "https://github.com/apple/swift-package-manager.git", .revision("617c8a7a8bf169830674545b721aaf72a6719328")),
     ],

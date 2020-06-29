@@ -115,7 +115,8 @@ struct SPMLLBTool: ParsableCommand {
         executionNum = existingExecutionNum + 1
 
         let executor = LLBLocalExecutor(
-            outputBase: buildDir.appending(components: "local_exector", "\(executionNum)")
+            outputBase: buildDir.appending(components: "local_exector", "\(executionNum)"),
+            delegate: self
         )
 
         let buildSystemDelegate = SwiftBuildSystemDelegate()
@@ -130,5 +131,19 @@ struct SPMLLBTool: ParsableCommand {
             executor: executor,
             functionCache: disableFnCache ? nil : fnCache
         )
+    }
+}
+
+extension SPMLLBTool: LLBLocalExecutorDelegate {
+    func launchingProcess(arguments: [String], workingDir: AbsolutePath, environment: [String : String]) {
+        print(arguments.joined(separator: " "))
+    }
+
+    func finishedProcess(with result: ProcessResult) {
+        if result.exitStatus == .terminated(code: 0) { return }
+
+        print("failed:", result.arguments.joined(separator: " "))
+        let output = try? (result.utf8Output() + result.utf8stderrOutput())
+        print(output ?? "", terminator: "")
     }
 }
