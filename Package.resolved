@@ -50,8 +50,8 @@
         "package": "llbuild2",
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
-          "branch": "ankit/pr",
-          "revision": "ec1d75c7e853ef04e50e33eae7eac21548bb7c14",
+          "branch": "master",
+          "revision": "322f70509f9ac366d3b49294e0725ee7aad97e0e",
           "version": null
         }
       },
