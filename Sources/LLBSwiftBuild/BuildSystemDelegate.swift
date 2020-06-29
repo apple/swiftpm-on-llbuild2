@@ -110,10 +110,13 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
         }
 
-        return manifest.and(target).and(srcArtifacts).flatMapThrowing { (manifestAndTarget, files) in
-            let manifest = manifestAndTarget.0
+        let includeDir = self.includeDir(target: target, srcTree: srcTree, ctx)
+
+        return manifest.and(target).and(srcArtifacts).and(includeDir).flatMapThrowing { (manifestAndTargetAndSrcs, includeDir) in
+            let manifest = manifestAndTargetAndSrcs.0.0
+            let target = manifestAndTargetAndSrcs.0.1
+            let files = manifestAndTargetAndSrcs.1
             let manifestTarget = manifest.targetMap[targetName]!
-            let target = manifestAndTarget.1
 
             var dependencies: [LLBLabel] = []
             for dependency in manifestTarget.dependencies {
@@ -142,10 +145,18 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                 )
             case .library:
                 if let cTarget = target as? ClangTarget {
+                    var inc: LLBArtifact?
+                    if let includeDir = includeDir {
+                        inc = LLBArtifact.sourceDirectory(
+                            shortPath: "include", dataID: includeDir
+                        )
+                    }
+
                     return CLibraryTarget(
                         name: cTarget.c99name,
                         sources: files,
                         dependencies: dependencies,
+                        includeDir: inc,
                         cTarget: cTarget
                     )
                 }
@@ -159,5 +170,23 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                 throw StringError("unsupported target \(target) \(target.type)")
             }
         }
+    }
+
+    func includeDir(
+        target: EventLoopFuture<Target>,
+        srcTree: LLBFuture<LLBCASFileTree>,
+        _ ctx: Context
+    ) -> EventLoopFuture<LLBDataID?> {
+        let includeDir = target.map { target -> ClangTarget? in
+            target as? ClangTarget
+        }.and(srcTree).flatMap { (target, srcTree) -> LLBFuture<LLBDataID?> in
+            guard let includeDir = target?.includeDir else {
+                return ctx.group.next().makeSucceededFuture(nil)
+            }
+            return srcTree.lookup(path: includeDir, in: ctx.db, ctx).map {
+                $0?.id
+            }
+        }
+        return includeDir
     }
 }
