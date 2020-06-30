@@ -15,6 +15,9 @@ let package = Package(
     platforms: [
         .macOS(.v10_15),
     ],
+    products: [
+        .library(name: "LLBSwiftBuild", targets: ["LLBSwiftBuild"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.0.1"),
         .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
