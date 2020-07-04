@@ -11,6 +11,7 @@ import NIO
 import PackageModel
 import TSCBasic
 import llbuild2
+import SwiftDriver
 
 public struct BaseTarget: Codable {
     var name: String
@@ -103,5 +104,44 @@ extension LLBArtifact {
 
     var shortPathRel: RelativePath {
         RelativePath(shortPath)
+    }
+}
+
+extension Array where Element == LLBArtifact {
+    func first(_ virtualPath: VirtualPath) -> LLBArtifact? {
+        self.first(where: { $0.path == virtualPath.name })
+    }
+}
+
+extension TypedVirtualPath {
+    func toLLBArtifact(
+        ruleContext: LLBRuleContext,
+        tmpDir: LLBArtifact,
+        inputArtifacts: [LLBArtifact]
+    ) throws -> LLBArtifact {
+        if let inputArtifact = inputArtifacts.first(file) {
+            return inputArtifact
+        }
+
+        let artifactPrefix = ruleContext.artifactRoots.joined(separator: "/")
+
+        switch file {
+        case .relative(let file):
+            var filePathString = file.pathString
+            // The paths created by driver will already have the artifact roots applied so remove them.
+            if file.pathString.hasPrefix(artifactPrefix) {
+                filePathString.removeFirst(artifactPrefix.count + 1)
+            }
+
+            return try ruleContext.declareArtifact(filePathString)
+
+        case .temporary(let file):
+            return try ruleContext.declareArtifact(tmpDir.shortPathRel.appending(file).pathString)
+
+        case .absolute:
+            throw StringError("unexpected virtual file with absolute path \(self)")
+        case .standardInput, .standardOutput:
+            fatalError("unexpected stdin/stdout virtual file \(self)")
+        }
     }
 }
