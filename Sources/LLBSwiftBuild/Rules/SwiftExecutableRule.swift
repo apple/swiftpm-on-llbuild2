@@ -83,14 +83,12 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
             outputs: [tmpDir]
         )
 
-        let existingArtifacts = sources + [executable] + dependencyObjects
-
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
             return try paths.map {
                 try $0.toLLBArtifact(
                     ruleContext: ruleContext,
                     tmpDir: tmpDir,
-                    existingArtifacts: existingArtifacts
+                    inputArtifacts: sources + globalDependencies
                 )
             }
         }
@@ -123,21 +121,42 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
     }
 }
 
+extension Array where Element == LLBArtifact {
+    func first(_ virtualPath: VirtualPath) -> LLBArtifact? {
+        self.first(where: { $0.path == virtualPath.name })
+    }
+}
+
 extension TypedVirtualPath {
     func toLLBArtifact(
         ruleContext: LLBRuleContext,
         tmpDir: LLBArtifact,
-        existingArtifacts: [LLBArtifact]
+        inputArtifacts: [LLBArtifact]
     ) throws -> LLBArtifact {
-        let artifact: LLBArtifact
-        if let existingArtifact = existingArtifacts.first(where: { $0.path == file.name }) {
-            artifact = existingArtifact
-        } else if file.isTemporary {
-            artifact = try ruleContext.declareArtifact(tmpDir.shortPath + "/" + file.name)
-        } else {
-            artifact = try ruleContext.declareArtifact(file.name)
-            print("declared \(self.file) \(artifact.path)")
+        if let inputArtifact = inputArtifacts.first(file) {
+            return inputArtifact
         }
-        return artifact
+
+        let artifactPrefix = ruleContext.artifactRoots.joined(separator: "/")
+
+        switch file {
+        case .relative(let file):
+            var filePathString = file.pathString
+            // The paths created by driver will already have the artifact roots applied so remove them.
+            if file.pathString.hasPrefix(artifactPrefix) {
+                filePathString.removeFirst(artifactPrefix.count + 1)
+            }
+
+            print("declaring", filePathString)
+            return try ruleContext.declareArtifact(filePathString)
+
+        case .temporary(let file):
+            return try ruleContext.declareArtifact(tmpDir.shortPathRel.appending(file).pathString)
+
+        case .absolute:
+            throw StringError("unexpected virtual file with absolute path \(self)")
+        case .standardInput, .standardOutput:
+            fatalError("unexpected stdin/stdout virtual file \(self)")
+        }
     }
 }

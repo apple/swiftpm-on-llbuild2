@@ -51,7 +51,6 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let cImportPaths = dependencies.flatMap { $0.cImportPaths }
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let swiftmodule = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftmodule")
-        let swiftsourceinfo = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftsourceinfo")
         let swiftdoc = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftdoc")
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
@@ -112,19 +111,19 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputs: [tmpDir]
         )
 
-        let existingArtifacts = sources + objects + [objectFile, swiftmodule, swiftdoc, swiftsourceinfo]
+        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps
+        let allInputArtifacts = sources + globalDependencies
+
 
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
             return try paths.map {
                 try $0.toLLBArtifact(
                     ruleContext: ruleContext,
                     tmpDir: tmpDir,
-                    existingArtifacts: existingArtifacts
+                    inputArtifacts: allInputArtifacts
                 )
             }
         }
-
-        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps
 
         var allObjectFiles: [LLBArtifact] = []
         for job in jobs {
@@ -140,7 +139,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
                     try $0.toLLBArtifact(
                         ruleContext: ruleContext,
                         tmpDir: tmpDir,
-                        existingArtifacts: existingArtifacts
+                        inputArtifacts: allInputArtifacts
                     )
                 }
             allObjectFiles += objects
@@ -160,7 +159,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             arguments: linkCommandLine,
             inputs: allObjectFiles,
             outputs: [objectFile],
-            mnemonic: "Linking \(objectFile.asRelativePath.basename)"
+            mnemonic: "Linking \(objectFile.pathRel.basename)"
         )
 
         let allObjects = dependencies.flatMap { $0.objects }

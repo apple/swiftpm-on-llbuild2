@@ -136,8 +136,10 @@ struct SPMLLBTool: ParsableCommand {
 }
 
 extension SPMLLBTool: LLBLocalExecutorDelegate {
-    func launchingProcess(arguments: [String], workingDir: AbsolutePath, environment: [String: String]) {
-        //        print(arguments.joined(separator: " "))
+    func launchingProcess(
+        arguments: [String],
+        workingDir: AbsolutePath,
+        environment: [String: String]) {
     }
 
     func finishedProcess(with result: ProcessResult) {

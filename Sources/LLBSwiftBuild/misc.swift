@@ -97,7 +97,11 @@ func sdkPlatformFrameworkPaths(
 fileprivate var _sdkPlatformFrameworkPath: (fwk: AbsolutePath, lib: AbsolutePath)? = nil
 
 extension LLBArtifact {
-    var asRelativePath: RelativePath {
+    var pathRel: RelativePath {
         RelativePath(path)
+    }
+
+    var shortPathRel: RelativePath {
+        RelativePath(shortPath)
     }
 }

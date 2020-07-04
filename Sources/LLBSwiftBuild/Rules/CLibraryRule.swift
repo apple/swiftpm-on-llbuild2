@@ -57,12 +57,9 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
 
-        var cImportPaths = [
-            "/Users/ankit/tmp/Yams/Sources/CYaml/include",
-            "/Users/ankit/tmp/Yams/Sources/CYaml/src",
-        ]
+        var cImportPaths: [String] = []
 
-        let moduleMap = "/Users/ankit/tmp/Yams/" + configuredTarget.moduleMap.pathString.dropFirst()
+        let moduleMap = configuredTarget.moduleMap.pathString
         cImportPaths += [AbsolutePath(moduleMap).parentDirectory.pathString]
 
         var objects: [LLBArtifact] = []
