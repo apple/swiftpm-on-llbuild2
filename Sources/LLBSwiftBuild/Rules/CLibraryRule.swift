@@ -10,9 +10,9 @@ import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
 import NIO
+import PackageModel
 import TSCBasic
 import llbuild2
-import PackageModel
 
 public struct CLibraryTarget: LLBConfiguredTarget, Codable {
     public var targetDependencies: [String: LLBTargetDependency] {
@@ -57,7 +57,7 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
 
         var cImportPaths = [
             "/Users/ankit/tmp/Yams/Sources/CYaml/include",
-            "/Users/ankit/tmp/Yams/Sources/CYaml/src"
+            "/Users/ankit/tmp/Yams/Sources/CYaml/src",
         ]
 
         let moduleMap = "/Users/ankit/tmp/Yams/" + configuredTarget.moduleMap.pathString.dropFirst()

@@ -7,9 +7,9 @@
 // See http://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
 import ArgumentParser
-import TSFCAS
 import NIO
 import TSCBasic
+import TSFCAS
 
 import class Foundation.ProcessInfo
 

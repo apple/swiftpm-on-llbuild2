@@ -10,11 +10,11 @@ import ArgumentParser
 import Foundation
 import LLBBuildSystem
 import LLBBuildSystemUtil
-import TSFCASFileTree
 import LLBSwiftBuild
 import NIO
 import TSCBasic
 import TSCLibc
+import TSFCASFileTree
 import llbuild2
 
 struct SPMLLBTool: ParsableCommand {
@@ -37,7 +37,8 @@ struct SPMLLBTool: ParsableCommand {
     func run() throws {
         let rootID: LLBDataID
 
-        let ctx = Context()
+        var ctx = Context()
+        ctx.buildEventDelegate = self
 
         let packagePath = try options.getPackagePath()
         if let rootID_ = self.rootID.flatMap({ LLBDataID(string: $0) }) {
@@ -136,7 +137,7 @@ struct SPMLLBTool: ParsableCommand {
 
 extension SPMLLBTool: LLBLocalExecutorDelegate {
     func launchingProcess(arguments: [String], workingDir: AbsolutePath, environment: [String: String]) {
-        print(arguments.joined(separator: " "))
+        //        print(arguments.joined(separator: " "))
     }
 
     func finishedProcess(with result: ProcessResult) {
@@ -145,5 +146,21 @@ extension SPMLLBTool: LLBLocalExecutorDelegate {
         print("failed:", result.arguments.joined(separator: " "))
         let output = try? (result.utf8Output() + result.utf8stderrOutput())
         print(output ?? "", terminator: "")
+    }
+}
+
+extension SPMLLBTool: LLBBuildEventDelegate {
+    func targetEvaluationRequested(label: LLBLabel) {
+        print("Evaluating \(label.targetName)")
+    }
+
+    func targetEvaluationCompleted(label: LLBLabel) {
+    }
+
+    func actionRequested(actionKey: LLBActionExecutionKey) {
+        print(actionKey.command.mnemonic)
+    }
+
+    func actionCompleted(actionKey: LLBActionExecutionKey, result: LLBActionResult) {
     }
 }
