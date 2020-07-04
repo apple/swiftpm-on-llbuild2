@@ -49,6 +49,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let cImportPaths = dependencies.flatMap { $0.cImportPaths }
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let swiftmodule = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftmodule")
+        let swiftsourceinfo = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftsourceinfo")
         let swiftdoc = try ruleContext.declareArtifact("build/\(configuredTarget.name).swiftdoc")
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
@@ -63,6 +64,17 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputFileMap.entries[.relative(RelativePath(source.path))] = entry
         }
 
+        let _tmpDir = try withTemporaryDirectory(removeTreeOnDeinit: false){ $0 }
+        defer {
+            try? localFileSystem.removeFileTree(_tmpDir)
+        }
+        let outputFileMapPath = _tmpDir.appending(components: "output-file-map.json")
+        try outputFileMap.store(
+            fileSystem: localFileSystem,
+            file: outputFileMapPath,
+            diagnosticEngine: DiagnosticsEngine()
+        )
+
         var commandLine: [String] = []
         commandLine += ["swiftc"]
         commandLine += ["-target", "x86_64-apple-macosx10.15"]
@@ -74,6 +86,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["-module-name", configuredTarget.base.c99name]
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
+        commandLine += ["-output-file-map", outputFileMapPath.pathString]
         commandLine += ["-parse-as-library", "-c"]
         commandLine += sources.map { $0.path }
 
@@ -83,7 +96,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             commandLine += ["-L", sdkPaths.lib.pathString]
         }
 
-        var driver = try Driver(args: commandLine, outputFileMap: outputFileMap)
+        var driver = try Driver(args: commandLine)
         let jobs = try driver.planBuild()
         let resolver = try ArgsResolver(
             fileSystem: localFileSystem,
@@ -97,7 +110,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputs: [tmpDir]
         )
 
-        let existingArtifacts = sources + objects + [objectFile, swiftmodule, swiftdoc]
+        let existingArtifacts = sources + objects + [objectFile, swiftmodule, swiftdoc, swiftsourceinfo]
 
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
             return try paths.map {
