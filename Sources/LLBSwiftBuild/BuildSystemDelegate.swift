@@ -141,6 +141,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             case .executable:
                 return SwiftExecutableTarget(
                     name: targetName,
+                    c99name: target.c99name,
                     sources: files,
                     dependencies: dependencies
                 )
@@ -154,7 +155,8 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                     }
 
                     return CLibraryTarget(
-                        name: cTarget.c99name,
+                        name: cTarget.name,
+                        c99name: target.c99name,
                         sources: files,
                         dependencies: dependencies,
                         includeDir: inc,
@@ -164,6 +166,7 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
 
                 return SwiftLibraryTarget(
                     name: targetName,
+                    c99name: target.c99name,
                     sources: files,
                     dependencies: dependencies
                 )

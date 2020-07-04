@@ -21,6 +21,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
 
     var base: BaseTarget
     var name: String { base.name }
+    var c99name: String { base.c99name }
     var sources: [LLBArtifact] { base.sources }
     var dependencies: [LLBLabel] { base.dependencies }
     var includeDir: LLBArtifact?
@@ -30,6 +31,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
 
     init(
         name: String,
+        c99name: String,
         sources: [LLBArtifact],
         dependencies: [LLBLabel],
         includeDir: LLBArtifact?,
@@ -37,7 +39,7 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
     ) {
         self.base = BaseTarget(
             name: name,
-            c99name: name,
+            c99name: c99name,
             sources: sources,
             dependencies: dependencies
         )
@@ -73,7 +75,7 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
             commandLine += ["-fobjc-arc", "-target", "x86_64-apple-macosx10.15"]
             commandLine += ["-isysroot", try darwinSDKPath()!.pathString]
             commandLine += ["-DSWIFT_PACKAGE=1", "-fblocks"]
-            commandLine += ["-fmodules", "-fmodule-name=\(configuredTarget.base.c99name)"]
+            commandLine += ["-fmodules", "-fmodule-name=\(configuredTarget.c99name)"]
             commandLine += cImportPaths.flatMap { ["-I", $0] }
 
             commandLine += ["-c", source.path]

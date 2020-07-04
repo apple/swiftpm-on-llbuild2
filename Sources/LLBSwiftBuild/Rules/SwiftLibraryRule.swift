@@ -21,17 +21,19 @@ public struct SwiftLibraryTarget: LLBConfiguredTarget, Codable {
 
     var base: BaseTarget
     var name: String { base.name }
+    var c99name: String { base.c99name }
     var sources: [LLBArtifact] { base.sources }
     var dependencies: [LLBLabel] { base.dependencies }
 
     init(
         name: String,
+        c99name: String,
         sources: [LLBArtifact],
         dependencies: [LLBLabel]
     ) {
         self.base = BaseTarget(
             name: name,
-            c99name: name,
+            c99name: c99name,
             sources: sources,
             dependencies: dependencies
         )
@@ -83,7 +85,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         // FIXME: RelativePath needs parentDirectory.
         commandLine += swiftmoduleDeps.flatMap { ["-I", RelativePath($0.path).dirname] }
         commandLine += cImportPaths.flatMap { ["-I", $0] }
-        commandLine += ["-module-name", configuredTarget.base.c99name]
+        commandLine += ["-module-name", configuredTarget.c99name]
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
         commandLine += ["-output-file-map", outputFileMapPath.pathString]
@@ -158,7 +160,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             arguments: linkCommandLine,
             inputs: allObjectFiles,
             outputs: [objectFile],
-            mnemonic: "Linking \(objectFile.path)"
+            mnemonic: "Linking \(objectFile.asRelativePath.basename)"
         )
 
         let allObjects = dependencies.flatMap { $0.objects }
