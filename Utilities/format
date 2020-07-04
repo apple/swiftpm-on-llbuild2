@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -eu
+
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+SRCROOT="`cd "${__dir}/..";pwd`"
+
+SWIFT_FORMAT=$(which swift-format)
+
+if [ ! -f "$SWIFT_FORMAT" ]; then
+	echo "error: swift-format not installed"
+	echo "install swift-format re-run the script"
+	exit 1
+fi
+
+set -x
+
+${SWIFT_FORMAT} \
+  --recursive \
+  --in-place \
+  --configuration ${SRCROOT}/.swift-format \
+  Package.swift \
+  Sources \
+  Tests
