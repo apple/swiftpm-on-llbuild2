@@ -111,9 +111,14 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
         }
 
         let includeDir = self.includeDir(target: target, srcTree: srcTree, ctx)
+        let headers = self.headers(label: label, target: target, srcTree: srcTree, ctx)
 
-        return manifest.and(target).and(srcArtifacts).and(includeDir).flatMapThrowing {
-            (manifestAndTargetAndSrcs, includeDir) in
+        let cTargetInfo = includeDir.and(headers).map { includeDir, headers in
+            CTargetInfo(label: label, includeDir: includeDir, headers: headers)
+        }
+
+        return manifest.and(target).and(srcArtifacts).and(cTargetInfo).flatMapThrowing {
+            (manifestAndTargetAndSrcs, cTargetInfo) in
             let manifest = manifestAndTargetAndSrcs.0.0
             let target = manifestAndTargetAndSrcs.0.1
             let files = manifestAndTargetAndSrcs.1
@@ -147,19 +152,14 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                 )
             case .library:
                 if let cTarget = target as? ClangTarget {
-                    var inc: LLBArtifact?
-                    if let includeDir = includeDir {
-                        inc = LLBArtifact.sourceDirectory(
-                            shortPath: "include", dataID: includeDir
-                        )
-                    }
-
                     return CLibraryTarget(
                         name: cTarget.name,
                         c99name: target.c99name,
                         sources: files,
+                        headers: cTargetInfo.headers,
                         dependencies: dependencies,
-                        includeDir: inc,
+                        includeDir: cTargetInfo.includeDirArtifact,
+                        moduleMap: nil,
                         cTarget: cTarget
                     )
                 }
@@ -174,6 +174,41 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
                 throw StringError("unsupported target \(target) \(target.type)")
             }
         }
+    }
+
+    func headers(
+        label: LLBLabel,
+        target: EventLoopFuture<Target>,
+        srcTree: LLBFuture<LLBCASFileTree>,
+        _ ctx: Context
+    ) -> EventLoopFuture<[LLBArtifact]> {
+        let headers = target.map { target -> ClangTarget? in
+            target as? ClangTarget
+        }.and(srcTree).flatMap { (target, srcTree) -> LLBFuture<[LLBArtifact]> in
+            guard var headers = target?.headers else {
+                return ctx.group.next().makeSucceededFuture([])
+            }
+
+            if let includeDir = target?.includeDir {
+                headers = headers.filter{ !$0.contains(includeDir) }
+            }
+
+            var futures: [LLBFuture<LLBArtifact>] = []
+            for path in headers {
+                let future = srcTree.lookup(path: path, in: ctx.db, ctx)
+                    .unwrapOptional(orStringError: "unable to find \(path)").map{ $0.id }
+                    .map {
+                        LLBArtifact.source(
+                            shortPath: path.basename,
+                            roots: [label.asRoot, "src"],
+                            dataID: $0
+                        )
+                    }
+                futures.append(future)
+            }
+            return LLBFuture.whenAllSucceed(futures, on: ctx.group.next())
+        }
+        return headers
     }
 
     func includeDir(
@@ -192,5 +227,21 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             }
         }
         return includeDir
+    }
+}
+
+struct CTargetInfo {
+    var label: LLBLabel
+    var includeDir: LLBDataID?
+    var headers: [LLBArtifact]
+
+    var includeDirArtifact: LLBArtifact? {
+        includeDir.map {
+            LLBArtifact.sourceDirectory(
+                shortPath: "include",
+                roots: [label.asRoot, "src"],
+                dataID: $0
+            )
+        }
     }
 }

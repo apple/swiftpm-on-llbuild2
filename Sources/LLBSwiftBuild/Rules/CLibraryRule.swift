@@ -23,18 +23,19 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
     var name: String { base.name }
     var c99name: String { base.c99name }
     var sources: [LLBArtifact] { base.sources }
+    let headers: [LLBArtifact]
     var dependencies: [LLBLabel] { base.dependencies }
     var includeDir: LLBArtifact?
-
-    // FIXME: This is obviously wrong.
-    var moduleMap: AbsolutePath
+    var moduleMap: LLBArtifact?
 
     init(
         name: String,
         c99name: String,
         sources: [LLBArtifact],
+        headers: [LLBArtifact],
         dependencies: [LLBLabel],
         includeDir: LLBArtifact?,
+        moduleMap: LLBArtifact?,
         cTarget: ClangTarget
     ) {
         self.base = BaseTarget(
@@ -43,8 +44,9 @@ public struct CLibraryTarget: LLBConfiguredTarget, Codable {
             sources: sources,
             dependencies: dependencies
         )
+        self.headers = headers
         self.includeDir = includeDir
-        self.moduleMap = cTarget.moduleMapPath
+        self.moduleMap = moduleMap
     }
 }
 
@@ -57,10 +59,13 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
         let objectFile = try ruleContext.declareArtifact("build/\(configuredTarget.name).o")
         let sources = configuredTarget.sources
 
+        var inputs: [LLBArtifact] = sources + configuredTarget.headers
         var cImportPaths: [String] = []
 
-        let moduleMap = configuredTarget.moduleMap.pathString
-        cImportPaths += [AbsolutePath(moduleMap).parentDirectory.pathString]
+        if let includeDir = configuredTarget.includeDir {
+            inputs += [includeDir]
+            cImportPaths += [includeDir.path]
+        }
 
         var objects: [LLBArtifact] = []
         for source in sources {
@@ -80,8 +85,9 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
 
             try ruleContext.registerAction(
                 arguments: commandLine,
-                inputs: [source],
-                outputs: [object]
+                inputs: inputs,
+                outputs: [object],
+                mnemonic: "Compiling \(configuredTarget.name) \(source.pathRel.basename)"
             )
         }
 
@@ -94,7 +100,8 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
         try ruleContext.registerAction(
             arguments: linkCommandLine,
             inputs: allObjectFiles,
-            outputs: [objectFile]
+            outputs: [objectFile],
+            mnemonic: "Linking \(objectFile.pathRel.basename)"
         )
 
         let provider = DefaultProvider(

@@ -25,7 +25,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-driver.git", .branch("master")),
         .package(
             url: "https://github.com/apple/swift-package-manager.git",
-            .revision("617c8a7a8bf169830674545b721aaf72a6719328")),
+            .revision("d2a41c0b9adea00fd842ac928d88d037313f747c")),
     ],
     targets: [
         .target(
