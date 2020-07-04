@@ -102,7 +102,8 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
             try ruleContext.registerAction(
                 arguments: [tool] + args,
                 inputs: inputs + globalDependencies,
-                outputs: outputs
+                outputs: outputs,
+                mnemonic: job.description
             )
         }
 

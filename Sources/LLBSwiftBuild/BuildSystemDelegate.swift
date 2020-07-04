@@ -112,7 +112,8 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
 
         let includeDir = self.includeDir(target: target, srcTree: srcTree, ctx)
 
-        return manifest.and(target).and(srcArtifacts).and(includeDir).flatMapThrowing { (manifestAndTargetAndSrcs, includeDir) in
+        return manifest.and(target).and(srcArtifacts).and(includeDir).flatMapThrowing {
+            (manifestAndTargetAndSrcs, includeDir) in
             let manifest = manifestAndTargetAndSrcs.0.0
             let target = manifestAndTargetAndSrcs.0.1
             let files = manifestAndTargetAndSrcs.1

@@ -78,7 +78,8 @@ func sdkPlatformFrameworkPaths(
     }
     let platformPath = try? Process.checkNonZeroExit(
         arguments: ["/usr/bin/xcrun", "--sdk", "macosx", "--show-sdk-platform-path"],
-        environment: environment).spm_chomp()
+        environment: environment
+    ).spm_chomp()
 
     if let platformPath = platformPath, !platformPath.isEmpty {
         // For XCTest framework.

@@ -64,7 +64,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputFileMap.entries[.relative(RelativePath(source.path))] = entry
         }
 
-        let _tmpDir = try withTemporaryDirectory(removeTreeOnDeinit: false){ $0 }
+        let _tmpDir = try withTemporaryDirectory(removeTreeOnDeinit: false) { $0 }
         defer {
             try? localFileSystem.removeFileTree(_tmpDir)
         }
@@ -146,7 +146,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             try ruleContext.registerAction(
                 arguments: [tool] + args,
                 inputs: inputs + globalDependencies,
-                outputs: outputs
+                outputs: outputs,
+                mnemonic: job.description
             )
         }
 
@@ -156,7 +157,8 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         try ruleContext.registerAction(
             arguments: linkCommandLine,
             inputs: allObjectFiles,
-            outputs: [objectFile]
+            outputs: [objectFile],
+            mnemonic: "Linking \(objectFile.path)"
         )
 
         let allObjects = dependencies.flatMap { $0.objects }
