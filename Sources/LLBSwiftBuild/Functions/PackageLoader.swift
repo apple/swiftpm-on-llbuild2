@@ -61,7 +61,9 @@ class PackageLoaderFunction: LLBBuildFunction<PackageLoaderRequest, PackageLoade
                 let diags = DiagnosticsEngine()
                 let builder = PackageBuilder(
                     manifest: manifest,
+                    productFilter: .everything,
                     path: .root,
+                    xcTestMinimumDeploymentTargets: [:],
                     fileSystem: fs,
                     diagnostics: diags
                 )

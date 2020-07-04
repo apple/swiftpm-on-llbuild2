@@ -16,6 +16,7 @@ import TSCBasic
 import TSCLibc
 import TSFCASFileTree
 import llbuild2
+import TSCUtility
 
 struct SPMLLBTool: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -56,7 +57,11 @@ struct SPMLLBTool: ParsableCommand {
             targets: try self.targets.map { try LLBLabel($0) }
         )
 
+        let startTime = Date()
         let result = try engine.build(request, as: BuildResult.self, ctx).wait()
+        let endTime = Date().timeIntervalSince(startTime)
+        print("Build duration: \(String(format: "%.2f", endTime))s")
+
         guard let executable = result.runnable else {
             throw StringError("expected runnable output from the target")
         }
