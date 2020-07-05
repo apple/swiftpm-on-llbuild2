@@ -50,7 +50,7 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         let swiftmoduleDeps = dependencies.compactMap { $0.swiftmodule }
         let dependencyObjects = dependencies.flatMap { $0.objects }
         // FIXME: We can do a little better and avoid adding dependency objects in the global dependencies because that will block the non-linking jobs from starting.
-        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps + dependencyObjects
+        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps + dependencyObjects + cImportPaths
 
         let tmpDir = try ruleContext.declareDirectoryArtifact("tmp")
         let executable = try ruleContext.declareArtifact("build/\(configuredTarget.name)")
@@ -63,8 +63,11 @@ public class SwiftExecutableRule: LLBBuildRule<SwiftExecutableTarget> {
         commandLine += ["-DSWIFT_PACKAGE"]
         // FIXME: RelativePath needs parentDirectory.
         commandLine += swiftmoduleDeps.flatMap { ["-I", RelativePath($0.path).dirname] }
-        commandLine += cImportPaths.flatMap { ["-I", $0] }
+        commandLine += cImportPaths.flatMap { ["-I", $0.path] }
         commandLine += ["-module-name", configuredTarget.c99name]
+        if let moduleCachePath = ruleContext.ctx.moduleCache?.path.pathString {
+            commandLine += ["-module-cache-path", moduleCachePath]
+        }
         commandLine += sources.map { $0.path }
         commandLine += dependencyObjects.map { $0.path }
         commandLine += ["-o", executable.path]

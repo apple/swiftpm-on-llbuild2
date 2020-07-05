@@ -50,8 +50,8 @@
         "package": "llbuild2",
         "repositoryURL": "https://github.com/apple/swift-llbuild2.git",
         "state": {
-          "branch": "master",
-          "revision": "5b25ce0838723fe4052c67e83bf505dc88551307",
+          "branch": "spmllb2",
+          "revision": "5f9e91b51b04899c46bc0e89c0e9b03cb2c42879",
           "version": null
         }
       },

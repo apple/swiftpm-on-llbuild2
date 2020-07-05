@@ -83,8 +83,13 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         commandLine += ["-DSWIFT_PACKAGE"]
         // FIXME: RelativePath needs parentDirectory.
         commandLine += swiftmoduleDeps.flatMap { ["-I", RelativePath($0.path).dirname] }
-        commandLine += cImportPaths.flatMap { ["-I", $0] }
+        commandLine += cImportPaths.flatMap { ["-I", $0.path] }
         commandLine += ["-module-name", configuredTarget.c99name]
+
+        if let moduleCachePath = ruleContext.ctx.moduleCache?.path.pathString {
+            commandLine += ["-module-cache-path", moduleCachePath]
+        }
+
         commandLine += ["-emit-module", "-emit-module-path", swiftmodule.path]
         commandLine += ["-emit-module-doc-path", swiftdoc.path]
         commandLine += ["-output-file-map", outputFileMapPath.pathString]
@@ -111,7 +116,7 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
             outputs: [tmpDir]
         )
 
-        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps
+        let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps + cImportPaths
         let allInputArtifacts = sources + globalDependencies
 
 
