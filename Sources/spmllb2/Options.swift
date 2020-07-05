@@ -20,6 +20,16 @@ struct Options: ParsableArguments {
 }
 
 extension Options {
+
+    /// Path to shared cache directory.
+    var llbspm2Cache: AbsolutePath {
+        localFileSystem.homeDirectory.appending(component: ".spmllb2")
+    }
+
+    var sharedModuleCache: AbsolutePath {
+        llbspm2Cache.appending(component: "ModuleCache")
+    }
+
     func db() throws -> LLBCASDatabase {
         let buildDir = try self.buildDir()
         return LLBFileBackedCASDatabase(

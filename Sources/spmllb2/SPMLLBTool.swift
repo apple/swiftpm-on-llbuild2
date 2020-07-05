@@ -43,6 +43,7 @@ struct SPMLLBTool: ParsableCommand {
 
         var ctx = Context()
         ctx.buildEventDelegate = self
+        ctx.moduleCache = SharedModuleCache(options.sharedModuleCache)
 
         let packagePath = try options.getPackagePath()
         if let rootID_ = self.rootID.flatMap({ LLBDataID(string: $0) }) {

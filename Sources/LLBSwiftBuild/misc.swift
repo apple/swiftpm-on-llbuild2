@@ -24,7 +24,7 @@ public struct DefaultProvider: LLBProvider, Codable {
     public var targetName: String
     public var runnable: LLBArtifact?
     public var swiftmodule: LLBArtifact?
-    public var cImportPaths: [String]
+    public var cImportPaths: [LLBArtifact]
     public var objects: [LLBArtifact]
     public var outputs: [LLBArtifact]
 }
@@ -142,6 +142,25 @@ extension TypedVirtualPath {
             throw StringError("unexpected virtual file with absolute path \(self)")
         case .standardInput, .standardOutput:
             fatalError("unexpected stdin/stdout virtual file \(self)")
+        }
+    }
+}
+
+public struct SharedModuleCache {
+    public var path: AbsolutePath
+
+    public init(_ path: AbsolutePath) {
+        self.path = path
+    }
+}
+
+extension Context {
+    public var moduleCache: SharedModuleCache? {
+        get {
+            self.getOptional(Optional<SharedModuleCache>.self).flatMap{ $0 }
+        }
+        set {
+            self.set(newValue)
         }
     }
 }

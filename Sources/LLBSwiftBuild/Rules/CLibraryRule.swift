@@ -60,11 +60,11 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
         let sources = configuredTarget.sources
 
         var inputs: [LLBArtifact] = sources + configuredTarget.headers
-        var cImportPaths: [String] = []
+        var cImportPaths: [LLBArtifact] = []
 
         if let includeDir = configuredTarget.includeDir {
             inputs += [includeDir]
-            cImportPaths += [includeDir.path]
+            cImportPaths += [includeDir]
         }
 
         var objects: [LLBArtifact] = []
@@ -78,7 +78,10 @@ public class CLibraryRule: LLBBuildRule<CLibraryTarget> {
             commandLine += ["-isysroot", try darwinSDKPath()!.pathString]
             commandLine += ["-DSWIFT_PACKAGE=1", "-fblocks"]
             commandLine += ["-fmodules", "-fmodule-name=\(configuredTarget.c99name)"]
-            commandLine += cImportPaths.flatMap { ["-I", $0] }
+            if let moduleCachePath = ruleContext.ctx.moduleCache?.path.pathString {
+                commandLine += ["-fmodules-cache-path=\(moduleCachePath)"]
+            }
+            commandLine += cImportPaths.flatMap { ["-I", $0.path] }
 
             commandLine += ["-c", source.path]
             commandLine += ["-o", object.path]
