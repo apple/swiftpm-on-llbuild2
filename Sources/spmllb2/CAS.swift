@@ -19,12 +19,9 @@ struct CASImport: ParsableCommand {
 
     func run() throws {
         let packagePath = try options.getPackagePath()
-
         let ctx = Context()
 
-        let casDir = localFileSystem.homeDirectory.appending(
-            components: ".spmllb2", "cas"
-        )
+        let casDir = options.llbspm2Cache.appending(component: "cas")
         let db = LLBFileBackedCASDatabase(
             group: options.group,
             path: casDir.appending(component: "file-cas")
@@ -46,7 +43,6 @@ struct CASImport: ParsableCommand {
             stats: progress,
             ctx
         ).wait()
-
         print("imported \(dataID)")
     }
 }

@@ -9,9 +9,9 @@
 import LLBBuildSystem
 import NIO
 import PackageModel
+import SwiftDriver
 import TSCBasic
 import llbuild2
-import SwiftDriver
 
 public struct BaseTarget: Codable {
     var name: String
@@ -157,7 +157,7 @@ public struct SharedModuleCache {
 extension Context {
     public var moduleCache: SharedModuleCache? {
         get {
-            self.getOptional(Optional<SharedModuleCache>.self).flatMap{ $0 }
+            self.getOptional(Optional<SharedModuleCache>.self).flatMap { $0 }
         }
         set {
             self.set(newValue)
