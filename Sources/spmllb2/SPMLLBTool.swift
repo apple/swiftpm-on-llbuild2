@@ -20,7 +20,10 @@ import TSCUtility
 
 struct SPMLLBTool: ParsableCommand {
     static let configuration = CommandConfiguration(
-        subcommands: []
+        subcommands: [
+            CASImport.self,
+            SQL.self,
+        ]
     )
 
     @OptionGroup()
