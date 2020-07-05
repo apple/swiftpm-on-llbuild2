@@ -119,7 +119,6 @@ public class SwiftLibraryRule: LLBBuildRule<SwiftLibraryTarget> {
         let globalDependencies = dependencies.flatMap { $0.outputs } + swiftmoduleDeps + cImportPaths
         let allInputArtifacts = sources + globalDependencies
 
-
         func toLLBArtifact(_ paths: [TypedVirtualPath]) throws -> [LLBArtifact] {
             return try paths.map {
                 try $0.toLLBArtifact(

@@ -14,9 +14,9 @@ import LLBSwiftBuild
 import NIO
 import TSCBasic
 import TSCLibc
+import TSCUtility
 import TSFCASFileTree
 import llbuild2
-import TSCUtility
 
 struct SPMLLBTool: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -148,7 +148,8 @@ extension SPMLLBTool: LLBLocalExecutorDelegate {
     func launchingProcess(
         arguments: [String],
         workingDir: AbsolutePath,
-        environment: [String: String]) {
+        environment: [String: String]
+    ) {
     }
 
     func finishedProcess(with result: ProcessResult) {

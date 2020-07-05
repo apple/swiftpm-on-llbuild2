@@ -190,13 +190,13 @@ extension SwiftBuildSystemDelegate: LLBConfiguredTargetDelegate {
             }
 
             if let includeDir = target?.includeDir {
-                headers = headers.filter{ !$0.contains(includeDir) }
+                headers = headers.filter { !$0.contains(includeDir) }
             }
 
             var futures: [LLBFuture<LLBArtifact>] = []
             for path in headers {
                 let future = srcTree.lookup(path: path, in: ctx.db, ctx)
-                    .unwrapOptional(orStringError: "unable to find \(path)").map{ $0.id }
+                    .unwrapOptional(orStringError: "unable to find \(path)").map { $0.id }
                     .map {
                         LLBArtifact.source(
                             shortPath: path.basename,
