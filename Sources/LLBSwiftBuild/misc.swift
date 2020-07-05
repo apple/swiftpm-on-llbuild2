@@ -123,7 +123,7 @@ extension TypedVirtualPath {
             return inputArtifact
         }
 
-        let artifactPrefix = ruleContext.artifactRoots.joined(separator: "/")
+        let artifactPrefix = ruleContext.outputsDirectory
 
         switch file {
         case .relative(let file):
